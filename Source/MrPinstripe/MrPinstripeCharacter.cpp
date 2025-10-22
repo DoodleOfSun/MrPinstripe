@@ -379,7 +379,7 @@ void AMrPinstripeCharacter::WallRunning(FVector WallLocation)
 		DetectedWallSign = 1;
 		FRotator Rotation = FRotator(0.f, -90.f, 0.f);
 		FVector WallRunDir = Rotation.RotateVector(WallNormal);
-		LaunchCharacter(WallRunDir * 650.f, true, true);
+		LaunchCharacter(WallRunDir * 850.f, true, true);
 
 	}
 
@@ -389,7 +389,7 @@ void AMrPinstripeCharacter::WallRunning(FVector WallLocation)
 		DetectedWallSign = -1;
 		FRotator Rotation = FRotator(0.f, 90.f, 0.f);
 		FVector WallRunDir = Rotation.RotateVector(WallNormal);
-		LaunchCharacter(WallRunDir * 650.f, true, true);
+		LaunchCharacter(WallRunDir * 850.f, true, true);
 	}
 }
 
@@ -458,7 +458,7 @@ void AMrPinstripeCharacter::WallJumping(FVector WallNormal)
 			UE_LOG(LogTemp, Warning, TEXT("%.2f 왼쪽"), WallNormal.Y);
 			FRotator Rotation = FRotator(0.f, -45.f, -50.f * WallNormal.Y);
 			FVector WallJumpingDir = Rotation.RotateVector(WallNormal);
-			LaunchCharacter(WallJumpingDir * 850.f, true, true);
+			LaunchCharacter(WallJumpingDir * 1050.f, true, true);
 		}
 		// 이 벽은 오른쪽에 있다
 		else
@@ -466,7 +466,7 @@ void AMrPinstripeCharacter::WallJumping(FVector WallNormal)
 			UE_LOG(LogTemp, Warning, TEXT("%.2f 오른쪽"), WallNormal.Y);
 			FRotator Rotation = FRotator(0.f, 45.f, -50.f * WallNormal.Y);
 			FVector WallJumpingDir = Rotation.RotateVector(WallNormal);
-			LaunchCharacter(WallJumpingDir * 850.f, true, true);
+			LaunchCharacter(WallJumpingDir * 1050.f, true, true);
 		}
 	}
 }

@@ -28,6 +28,7 @@ void AEnemy::Init() {
 	IsWallRunning = false;
 	IsCrouching = false;
 	IsDetectedPlayer = false;
+	IsReadyToShot = false;
 
 	TArray<AActor*> FoundActors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AMrPinstripeCharacter::StaticClass(), FoundActors);
@@ -44,6 +45,30 @@ void AEnemy::Init() {
 
 	AimOffsetVector = FVector(0.f, 5.f, 0.f);
 
+
+	// 총알을 초기화한다
+	// 총알의 장전 수는 BP 이름에 따라 다르다.
+	if (GetName().Contains("Pistol")) {
+		OriginAmmo = 9;
+		CurrentAmmo = OriginAmmo;
+	}
+	else {
+		UE_LOG(LogTemp,Warning,TEXT("허용되지 않은 무기 이름입니다. BP 이름을 제대로 확인하셨나요?"));
+	}
+
+	CurrentCoverActor = nullptr;
+
+	MissBullet = 0;
+
+
+	TrackingTraceTime = 0.f;
+
+	// 발사 속도를 초기화
+	if (GetName().Contains("Pistol")) {
+		FireRateTiming = 1.2f;
+	}
+
+	FireTime = 0.f;
 }
 
 // Called every frame
@@ -52,6 +77,7 @@ void AEnemy::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	DetectingPlayerByDistance(DeltaTime);
 	CaculatingAimOffsetRotation(DeltaTime);
+	Firing(DeltaTime);
 }
 
 void AEnemy::Scouting(FVector ScoutPos){
@@ -74,13 +100,77 @@ void AEnemy::FindingPlayerAndFocus() {
 
 }
 
-void AEnemy::Firing() {
+void AEnemy::Firing(float DeltaTime) {
 
+	if (IsReadyToShot) {
+
+		FireTime += DeltaTime;
+
+		UE_LOG(LogTemp, Warning, TEXT("플레이어를 발견하여 사격 중. 파이어타임 : %.2f"), FireTime);
+
+		if (FireTime >= 1.5f) {
+
+			FireTime = 0.f;
+
+			// 발사 로직
+			// 처음 3발은 빗나가게 한다
+			if (MissBullet < 3) {
+				MissBullet++;
+				FHitResult Hit;
+				FVector StartTrace = GetActorLocation();
+	
+
+				float SpreadAngle = 65.0f; // 퍼짐 각도 (도 단위)
+				FVector RandomSpread = FMath::VRandCone(GetActorForwardVector(), FMath::DegreesToRadians(SpreadAngle));
+
+
+				FVector EndTrace = StartTrace + (RandomSpread * 10000);
+				DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Green, false, 5.0f);
+				GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_Visibility);
+
+				if (Hit.GetActor() != nullptr) {
+					UE_LOG(LogTemp, Warning, TEXT("Hit Actor: 적의 공격 %s"), *Hit.GetActor()->GetName());
+				}
+				else if (Hit.GetActor() == nullptr) {
+
+					UE_LOG(LogTemp, Warning, TEXT("적의 공격, GetActor가 nullptr임."));
+				}
+
+			}
+
+			// 플레이어가 데미지를 입을 수도 있는 로직
+			else {
+
+				FHitResult Hit;
+				FVector StartTrace = GetActorLocation();
+
+				float SpreadAngle = 65.0f; // 퍼짐 각도 (도 단위)
+				FVector RandomSpread = FMath::VRandCone(GetActorForwardVector(), FMath::DegreesToRadians(SpreadAngle));
+
+				FVector EndTrace = StartTrace + (RandomSpread * 10000);
+				DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Green, false, 5.0f);
+				GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_Visibility);
+
+				if (Hit.GetActor() != nullptr) {
+					UE_LOG(LogTemp, Warning, TEXT("Hit Actor, 적의 공격: %s"), *Hit.GetActor()->GetName());
+				}
+				else if (Hit.GetActor() == nullptr) {
+
+					UE_LOG(LogTemp, Warning, TEXT("적의 공격, GetActor가 nullptr임."));
+				}
+			}
+
+		}
+	}
 }
 
 float AEnemy::GetCurrentVelocity() {
-	return FMath::Clamp(GetVelocity().Size() / GetCharacterMovement()->MaxWalkSpeed, 0.0f, 1.0f);
+	static float SmoothedSpeed = 0.f;
+	float CurrentSpeed = GetVelocity().Size();
+	SmoothedSpeed = FMath::FInterpTo(SmoothedSpeed, CurrentSpeed, GetWorld()->GetDeltaSeconds(), 5.f);
+	return SmoothedSpeed;
 }
+
 
 void AEnemy::WallRunning() {
 
@@ -106,25 +196,63 @@ void AEnemy::FindingWallForWallRunning(float DeltaTime) {
 // 전환되는 플래그는 에임오프셋 계산여부를 결정
 void AEnemy::DetectingPlayerByDistance(float DeltaTime) {
 
-	if (FVector::Dist(TargetPlayerCharacter->GetActorLocation(), GetActorLocation()) <= 300.f) {
+	if (FVector::Dist(TargetPlayerCharacter->GetActorLocation(), GetActorLocation()) <= 1500.f) {
+		UE_LOG(LogTemp, Warning, TEXT("플레이어 감지됨."));
 		IsDetectedPlayer = true;
+
+		// 플레이어가 거리 내에 들어오면 지금 위치에서 총을 발사했을 때 적중이 가능한지 라인트레이스로 판단을 한다.
+		// 런타임에서 이것을 실행시키면 지나치게 많이 검사를 하므로 3초에 한번씩 실행
+		TrackingTraceTime += DeltaTime;
+		if (TrackingTraceTime >= 3.f) {
+			TrackingTraceTime = 0.f;
+			TrackingPlayerByLineTrace();
+		}
 	}
 	else {
 		IsDetectedPlayer = false;
 	}
 }
 
+// 플레이어와 가까워졌다고 해서 바로 공격하지 않는다 플레이어가 엄폐를 할 수도 있기 때문. 
+// 확실하게 공격이 가능한지 라인트레이스로 판단하고 플래그를 변경
+// 또한 이 함수는 IsDetectedPlayer가 true가 되었을 때부터 라인트레이스를 시작한다
+void AEnemy::TrackingPlayerByLineTrace()
+{
+	FVector MyLoc = GetActorLocation();
+	FVector TargetLoc = TargetPlayerCharacter->GetActorLocation();
+
+	FHitResult Hit;
+
+	GetWorld()->LineTraceSingleByChannel(Hit, MyLoc, TargetLoc, ECC_Visibility);
+
+	if (Hit.GetActor() != nullptr) {
+
+		// 플레이어에게 사격이 가능한 각도임.
+		if (Hit.GetActor()->GetName().Contains("Viewmodel")) {
+			DrawDebugLine(GetWorld(), MyLoc, Hit.Location, FColor::Green, false, 5.0f);
+			IsReadyToShot = true;	
+		}
+
+		// 플레이어를 감지했으나 플레이어가 엄폐함.
+		else {
+			DrawDebugLine(GetWorld(), MyLoc, Hit.Location, FColor::Red, false, 5.0f);
+			IsReadyToShot = false;
+		}
+	}
+	// 플레이어가 없음.
+	else if (Hit.GetActor() == nullptr) {
+		DrawDebugLine(GetWorld(), MyLoc, TargetLoc, FColor::Emerald, false, 5.0f);
+		IsReadyToShot = false;
+	}
+}
+
 void AEnemy::CaculatingAimOffsetRotation(float DeltaTime) {
 
 	if (IsDetectedPlayer) {
-
-
 		FVector MyLocation = GetActorLocation();
 		FVector TargetLocation = TargetPlayerCharacter->GetActorLocation();
 
 		FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(MyLocation, TargetLocation);
-
-
 
 		// 내적 계산
 		FVector ForwardVector = GetActorForwardVector(); // 몬스터가 바라보는 방향
@@ -157,16 +285,15 @@ void AEnemy::CaculatingAimOffsetRotation(float DeltaTime) {
 				CaculatedYaw = (1 - Dot) * 90.f;
 			}
 
-			UE_LOG(LogTemp, Warning, TEXT("Pitch : %.2f"), LookAtRot.Pitch);
-			UE_LOG(LogTemp, Warning, TEXT("Yaw : %.2f"), CaculatedYaw);
-			UE_LOG(LogTemp, Warning, TEXT("Roll : %.2f"), LookAtRot.Roll);
-
 			AimOffsetVector.X = CaculatedYaw;
 			AimOffsetVector.Y = LookAtRot.Pitch;
 			AimOffsetVector.Z = LookAtRot.Roll;
 
 
 
+			UE_LOG(LogTemp, Warning, TEXT("Pitch : %.2f"), AimOffsetVector.X);
+			UE_LOG(LogTemp, Warning, TEXT("Yaw : %.2f"), AimOffsetVector.Y);
+			UE_LOG(LogTemp, Warning, TEXT("Roll : %.2f"), AimOffsetVector.Z);
 
 		}
 		else {

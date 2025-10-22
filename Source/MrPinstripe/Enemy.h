@@ -48,7 +48,7 @@ public:
 	void FindingPlayerAndFocus();
 
 	UFUNCTION(BlueprintCallable)
-	void Firing();
+	void Firing(float DeltaTime);
 
 	UFUNCTION(BlueprintCallable)
 	float GetCurrentVelocity();
@@ -77,7 +77,8 @@ protected:
 
 	void CaculatingAimOffsetRotation(float DeltaTime);
 
-	// 멤버 변수는 여기에 선언
+	void TrackingPlayerByLineTrace();
+
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -87,7 +88,7 @@ public:
 	float HP;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float Ammo;
+	int OriginAmmo;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString WeaponTypeFStr;
@@ -101,9 +102,23 @@ public:
 	bool IsCrouching;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool IsDetectedPlayer;
+	bool IsDetectedPlayer;	// 플레이어가 일정 거리에 들어오면 true로 전환, 이동과 공격 여부 확인에 사용
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector AimOffsetVector;
 
+	bool IsReadyToShot;	// 플레이어와 적 사이에 장애물이 없으면 발포하게 해주는 플래그, IsDetectedPlayer가 True일 때만 이를 검사
+
+private:
+	int CurrentAmmo;
+
+	float FireTime;
+
+	float FireRateTiming;	// FireTime이 이 변수 이상이 되면 총을 발사한다.
+
+	AActor* CurrentCoverActor;
+
+	int MissBullet;
+
+	float TrackingTraceTime;
 };
