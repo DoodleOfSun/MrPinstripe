@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "NiagaraSystem.h"
+#include "NiagaraComponent.h"
 #include "GameFramework/Character.h"
 #include "MrPinstripeCharacter.h"
 #include "Enemy.generated.h"
@@ -62,6 +64,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Die();
 
+	// 총구 화염 나이아가라 컴포넌트
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UNiagaraComponent* MuzzleFlameComponent;
+
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -79,6 +86,7 @@ protected:
 
 	void TrackingPlayerByLineTrace();
 
+	void FindingNiagara();
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

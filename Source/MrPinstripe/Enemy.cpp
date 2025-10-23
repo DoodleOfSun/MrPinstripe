@@ -6,6 +6,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "NiagaraSystem.h"
+#include "NiagaraComponent.h"
 
 // Sets default values
 AEnemy::AEnemy()
@@ -69,6 +71,10 @@ void AEnemy::Init() {
 	}
 
 	FireTime = 0.f;
+
+	FindingNiagara();
+
+	MuzzleFlameComponent->Deactivate();
 }
 
 // Called every frame
@@ -106,10 +112,10 @@ void AEnemy::Firing(float DeltaTime) {
 
 		FireTime += DeltaTime;
 
-		UE_LOG(LogTemp, Warning, TEXT("플레이어를 발견하여 사격 중. 파이어타임 : %.2f"), FireTime);
+		if (FireTime >= FireRateTiming) {
 
-		if (FireTime >= 1.5f) {
 
+			UE_LOG(LogTemp, Warning, TEXT("플레이어를 발견하여 사격 중. 파이어타임 : %.2f"), FireTime);
 			FireTime = 0.f;
 
 			// 발사 로직
@@ -117,16 +123,27 @@ void AEnemy::Firing(float DeltaTime) {
 			if (MissBullet < 3) {
 				MissBullet++;
 				FHitResult Hit;
-				FVector StartTrace = GetActorLocation();
+				FVector StartTrace = FVector(GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z + 50.f);
 	
 
-				float SpreadAngle = 65.0f; // 퍼짐 각도 (도 단위)
-				FVector RandomSpread = FMath::VRandCone(GetActorForwardVector(), FMath::DegreesToRadians(SpreadAngle));
+				float SpreadAngle = 35.0f; // 퍼짐 각도 (도 단위)
 
+				FVector RandomSpread = FMath::VRandCone(
+					(TargetPlayerCharacter->GetActorLocation() - GetActorLocation()).GetSafeNormal(),
+					FMath::DegreesToRadians(SpreadAngle)
+				);
 
 				FVector EndTrace = StartTrace + (RandomSpread * 10000);
 				DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Green, false, 5.0f);
-				GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_Visibility);
+
+				FCollisionObjectQueryParams ObjectQueryParams;
+				ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
+				ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+
+				FCollisionQueryParams QueryParams;
+				QueryParams.AddIgnoredActor(this);
+
+				GetWorld()->LineTraceSingleByObjectType(Hit, StartTrace, EndTrace, ObjectQueryParams, QueryParams);
 
 				if (Hit.GetActor() != nullptr) {
 					UE_LOG(LogTemp, Warning, TEXT("Hit Actor: 적의 공격 %s"), *Hit.GetActor()->GetName());
@@ -136,20 +153,36 @@ void AEnemy::Firing(float DeltaTime) {
 					UE_LOG(LogTemp, Warning, TEXT("적의 공격, GetActor가 nullptr임."));
 				}
 
+				// 총구 화염 활성화
+				MuzzleFlameComponent->Activate(true);
 			}
 
-			// 플레이어가 데미지를 입을 수도 있는 로직
-			else {
+			// 플레이어가 위험해질 수 있도록 각도를 조정한 로직
+			else
+			{
 
 				FHitResult Hit;
-				FVector StartTrace = GetActorLocation();
+				FVector StartTrace = FVector(GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z + 50.f);
 
-				float SpreadAngle = 65.0f; // 퍼짐 각도 (도 단위)
-				FVector RandomSpread = FMath::VRandCone(GetActorForwardVector(), FMath::DegreesToRadians(SpreadAngle));
+				float SpreadAngle = 15.0f; // 퍼짐 각도 (도 단위)
+
+				FVector RandomSpread = FMath::VRandCone(
+					(TargetPlayerCharacter->GetActorLocation() - GetActorLocation()).GetSafeNormal(),
+					FMath::DegreesToRadians(SpreadAngle)
+				);
 
 				FVector EndTrace = StartTrace + (RandomSpread * 10000);
+
+
+				FCollisionObjectQueryParams ObjectQueryParams;
+				ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
+				ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+
+				FCollisionQueryParams QueryParams;
+				QueryParams.AddIgnoredActor(this);
+
 				DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Green, false, 5.0f);
-				GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_Visibility);
+				GetWorld()->LineTraceSingleByObjectType(Hit, StartTrace, EndTrace, ObjectQueryParams, QueryParams);
 
 				if (Hit.GetActor() != nullptr) {
 					UE_LOG(LogTemp, Warning, TEXT("Hit Actor, 적의 공격: %s"), *Hit.GetActor()->GetName());
@@ -158,8 +191,14 @@ void AEnemy::Firing(float DeltaTime) {
 
 					UE_LOG(LogTemp, Warning, TEXT("적의 공격, GetActor가 nullptr임."));
 				}
-			}
 
+
+				MuzzleFlameComponent->Activate(true);
+			}
+		}
+		else
+		{
+			MuzzleFlameComponent->Deactivate();
 		}
 	}
 }
@@ -167,7 +206,7 @@ void AEnemy::Firing(float DeltaTime) {
 float AEnemy::GetCurrentVelocity() {
 	static float SmoothedSpeed = 0.f;
 	float CurrentSpeed = GetVelocity().Size();
-	SmoothedSpeed = FMath::FInterpTo(SmoothedSpeed, CurrentSpeed, GetWorld()->GetDeltaSeconds(), 5.f);
+	SmoothedSpeed = FMath::FInterpTo(SmoothedSpeed, CurrentSpeed, GetWorld()->GetDeltaSeconds(), 2.2f);
 	return SmoothedSpeed;
 }
 
@@ -197,18 +236,18 @@ void AEnemy::FindingWallForWallRunning(float DeltaTime) {
 void AEnemy::DetectingPlayerByDistance(float DeltaTime) {
 
 	if (FVector::Dist(TargetPlayerCharacter->GetActorLocation(), GetActorLocation()) <= 1500.f) {
-		UE_LOG(LogTemp, Warning, TEXT("플레이어 감지됨."));
 		IsDetectedPlayer = true;
 
 		// 플레이어가 거리 내에 들어오면 지금 위치에서 총을 발사했을 때 적중이 가능한지 라인트레이스로 판단을 한다.
 		// 런타임에서 이것을 실행시키면 지나치게 많이 검사를 하므로 3초에 한번씩 실행
 		TrackingTraceTime += DeltaTime;
-		if (TrackingTraceTime >= 3.f) {
+		if (TrackingTraceTime >= 0.3f) {
 			TrackingTraceTime = 0.f;
 			TrackingPlayerByLineTrace();
 		}
 	}
-	else {
+	else
+	{
 		IsDetectedPlayer = false;
 	}
 }
@@ -223,13 +262,19 @@ void AEnemy::TrackingPlayerByLineTrace()
 
 	FHitResult Hit;
 
-	GetWorld()->LineTraceSingleByChannel(Hit, MyLoc, TargetLoc, ECC_Visibility);
+	FCollisionObjectQueryParams ObjectQueryParams;
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+
+	GetWorld()->LineTraceSingleByObjectType(Hit, MyLoc, TargetLoc, ObjectQueryParams, QueryParams);
 
 	if (Hit.GetActor() != nullptr) {
-
 		// 플레이어에게 사격이 가능한 각도임.
 		if (Hit.GetActor()->GetName().Contains("Viewmodel")) {
-			DrawDebugLine(GetWorld(), MyLoc, Hit.Location, FColor::Green, false, 5.0f);
+			//DrawDebugLine(GetWorld(), MyLoc, Hit.Location, FColor::Green, false, 5.0f);
 			IsReadyToShot = true;	
 		}
 
@@ -239,16 +284,12 @@ void AEnemy::TrackingPlayerByLineTrace()
 			IsReadyToShot = false;
 		}
 	}
-	// 플레이어가 없음.
-	else if (Hit.GetActor() == nullptr) {
-		DrawDebugLine(GetWorld(), MyLoc, TargetLoc, FColor::Emerald, false, 5.0f);
-		IsReadyToShot = false;
-	}
 }
 
 void AEnemy::CaculatingAimOffsetRotation(float DeltaTime) {
 
-	if (IsDetectedPlayer) {
+	if (IsDetectedPlayer)
+	{
 		FVector MyLocation = GetActorLocation();
 		FVector TargetLocation = TargetPlayerCharacter->GetActorLocation();
 
@@ -260,52 +301,76 @@ void AEnemy::CaculatingAimOffsetRotation(float DeltaTime) {
 		FVector ToTarget = (TargetLocation - MyLocation).GetSafeNormal(); // 방향 벡터
 		float Dot = FVector::DotProduct(ForwardVector, ToTarget);
 
-		if (Dot > 0) {
-
-			UE_LOG(LogTemp,Warning,TEXT("정면에 있음, 내적은 : %.2f"), Dot);
+		if (Dot > 0)
+		{
 
 			FVector Cross = FVector::CrossProduct(ForwardVector, ToTarget);
 			float Sign = FMath::Sign(Cross.Z);
 
 			float CaculatedYaw = 0.f;
-
-
 			// 왼쪽일때 외적이 -1, 오른쪽일때 1
 
 			// 왼쪽
 			if (Sign < 0) {
-				UE_LOG(LogTemp, Warning, TEXT("왼쪽 Pitch 값 : %.2f"), (1 - Dot) * -90.f );
 				CaculatedYaw = (1 - Dot) * -90.f;
 			}
 
 			// 오른쪽
 			else {
-
-				UE_LOG(LogTemp, Warning, TEXT("오른쪽 Pitch 값 : %.2f"), (1 - Dot) * 90.f);
 				CaculatedYaw = (1 - Dot) * 90.f;
 			}
 
-			AimOffsetVector.X = CaculatedYaw;
-			AimOffsetVector.Y = LookAtRot.Pitch;
-			AimOffsetVector.Z = LookAtRot.Roll;
-
-
-
-			UE_LOG(LogTemp, Warning, TEXT("Pitch : %.2f"), AimOffsetVector.X);
-			UE_LOG(LogTemp, Warning, TEXT("Yaw : %.2f"), AimOffsetVector.Y);
-			UE_LOG(LogTemp, Warning, TEXT("Roll : %.2f"), AimOffsetVector.Z);
+			AimOffsetVector.X = FMath::FInterpTo(AimOffsetVector.X, CaculatedYaw, DeltaTime, 2.8f);
+			AimOffsetVector.Y = FMath::FInterpTo(AimOffsetVector.Y, LookAtRot.Pitch, DeltaTime, 2.8f);
+			AimOffsetVector.Z = FMath::FInterpTo(AimOffsetVector.Z, LookAtRot.Roll, DeltaTime, 2.8f);
 
 		}
-		else {
 
-			UE_LOG(LogTemp, Warning, TEXT("정면에 있지 않음."));
 
-			AimOffsetVector.X = 0.f;
-			AimOffsetVector.Y = 0.5f;
-			AimOffsetVector.Z = 0.f;
 
+		// 플레이어는 감지되었으나 후방으로 벗어난 경우 (Dot이 0 이하)
+		// 객체를 천천히 플레이어를 향해 돌린다.
+		else
+		{
+			SetActorRelativeRotation(FMath::RInterpTo(GetActorRotation(), LookAtRot, DeltaTime, 1.2f));
 		}
 		
 
+	}
+	else {
+
+		AimOffsetVector.X = FMath::FInterpTo(AimOffsetVector.X, 0.f, DeltaTime, 2.2f);
+		AimOffsetVector.Y = FMath::FInterpTo(AimOffsetVector.Y, 0.5f, DeltaTime, 2.2f);
+		AimOffsetVector.Z = FMath::FInterpTo(AimOffsetVector.Z, 0.f, DeltaTime, 2.2f);
+
+	}
+}
+
+
+void AEnemy::FindingNiagara()
+{
+	if (!this) return;
+
+	// CharacterMesh0 찾기
+	USkeletalMeshComponent* CharacterMesh = FindComponentByClass<USkeletalMeshComponent>();
+	if (!CharacterMesh) return;
+
+	// CharacterMesh의 자식 컴포넌트 중에서 Niagara 찾기
+	TArray<USceneComponent*> ChildrenOfCharacterMesh;
+
+	CharacterMesh->GetChildrenComponents(true, ChildrenOfCharacterMesh);
+
+	for (USceneComponent* Child : ChildrenOfCharacterMesh)
+	{
+		if (Child->GetName() == TEXT("Niagara")) // 블루프린트에서 이름 확인 필요
+		{
+			UNiagaraComponent* MuzzleFlashComp = Cast<UNiagaraComponent>(Child);
+			if (MuzzleFlashComp)
+			{
+				MuzzleFlameComponent = MuzzleFlashComp;
+				MuzzleFlameComponent->Deactivate();
+			}
+			break;
+		}
 	}
 }

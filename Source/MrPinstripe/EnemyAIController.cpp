@@ -36,6 +36,7 @@ void AEnemyAIController::Tick(float DeltaTime)
 	// 플레이어가 일정 거리에 들어오면 IsDetectedPlayer가 True가 된다
 	// 또 적이 플레이어에게 레이트레이스를 쏘았을때 충돌 여부에 따라 IsReadyToShot이 True가 되는데 이것으로 위치를 옮길지를 판단한다.
 	// 단, 이 로직은 10초마다 검사하도록 한다. 적이 항상 이동을 하는 것은 부자연스럽기 때문이다.
+	// 이동을 방지하겠다면 단순히 CoverMoveTime으로 판단하는 조건문을 없애고 1번만 실행시키게 할 것.
 
 	CoverMoveTime += DeltaTime;
 	
