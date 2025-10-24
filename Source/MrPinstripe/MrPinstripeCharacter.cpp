@@ -279,7 +279,7 @@ void AMrPinstripeCharacter::PhysSlide(float DeltaTime)
 
 				GetCharacterMovement()->GroundFriction = 0;
 				GetCharacterMovement()->BrakingDecelerationWalking = 1600.f;  // 지면의 감속력, 이게 2048에 가까워지거나 더 높아지면 Velocity 값이 줄어드는 속도가 빨라짐
-				GetCharacterMovement()->Velocity += Accel * DeltaTime;
+				GetCharacterMovement()->Velocity += Accel * DeltaTime * 1.28f;
 				GetCharacterMovement()->Velocity -= SlideDir * FrictionFloat * DeltaTime;
 				GetCharacterMovement()->MoveUpdatedComponent(GetCharacterMovement()->Velocity * DeltaTime, GetCharacterMovement()->UpdatedComponent->GetComponentQuat(), true);
 

@@ -8,6 +8,9 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "NiagaraSystem.h"
 #include "NiagaraComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/AudioComponent.h"
+
 
 // Sets default values
 AEnemy::AEnemy()
@@ -73,7 +76,6 @@ void AEnemy::Init() {
 	FireTime = 0.f;
 
 	FindingNiagara();
-
 	MuzzleFlameComponent->Deactivate();
 }
 
@@ -160,7 +162,6 @@ void AEnemy::Firing(float DeltaTime) {
 			// 플레이어가 위험해질 수 있도록 각도를 조정한 로직
 			else
 			{
-
 				FHitResult Hit;
 				FVector StartTrace = FVector(GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z + 50.f);
 
@@ -193,9 +194,15 @@ void AEnemy::Firing(float DeltaTime) {
 				}
 
 
-				MuzzleFlameComponent->Activate(true);
 			}
+
+
+
+			// 효과 재생
+			MuzzleFlameComponent->Activate(true);
+			UGameplayStatics::PlaySoundAtLocation(this, FireSoundCue, GetActorLocation());
 		}
+
 		else
 		{
 			MuzzleFlameComponent->Deactivate();
@@ -205,8 +212,8 @@ void AEnemy::Firing(float DeltaTime) {
 
 float AEnemy::GetCurrentVelocity() {
 	static float SmoothedSpeed = 0.f;
-	float CurrentSpeed = GetVelocity().Size();
-	SmoothedSpeed = FMath::FInterpTo(SmoothedSpeed, CurrentSpeed, GetWorld()->GetDeltaSeconds(), 2.2f);
+	float CurrentSpeed = GetVelocity().Size() * 0.85;
+	SmoothedSpeed = FMath::FInterpTo(SmoothedSpeed, CurrentSpeed, GetWorld()->GetDeltaSeconds(), 5.7f);
 	return SmoothedSpeed;
 }
 
@@ -334,7 +341,13 @@ void AEnemy::CaculatingAimOffsetRotation(float DeltaTime) {
 		{
 			SetActorRelativeRotation(FMath::RInterpTo(GetActorRotation(), LookAtRot, DeltaTime, 1.2f));
 		}
-		
+
+
+
+		// 플레이어가 웅크렸을 때 Y축 오프셋을 하향 조정한다.
+		if (TargetPlayerCharacter->IsCrouched) {
+			AimOffsetVector.Y = FMath::FInterpTo(AimOffsetVector.Y, LookAtRot.Pitch - 50.f, DeltaTime, 2.2f);
+		}
 
 	}
 	else {

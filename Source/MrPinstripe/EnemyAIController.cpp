@@ -4,6 +4,8 @@
 #include "EnemyAIController.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Navigation/PathFollowingComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/AudioComponent.h"
 
 
 AEnemyAIController::AEnemyAIController(const FObjectInitializer& ObjectInitializer)
@@ -24,7 +26,6 @@ void AEnemyAIController::OnPossess(APawn* InPawn)
 	CurrentCoverActor = nullptr;
 
 	MoveToNextCoverLocation();
-
 }
 
 void AEnemyAIController::Tick(float DeltaTime)
@@ -45,10 +46,10 @@ void AEnemyAIController::Tick(float DeltaTime)
 		CoverMoveTime = 0.f;
 		if (ControlledEnemy->IsDetectedPlayer && !ControlledEnemy->IsReadyToShot)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("엄폐물 위치 변경 중..."));
 			MoveToNextCoverLocation();
 		}
 	}
-
 }
 
 
@@ -86,12 +87,13 @@ void AEnemyAIController::MoveToNextCoverLocation()
 			if (NearestDistance > Distance) {
 				NearestCoverActor = Hit.GetActor();
 				NearestDistance = Distance;
+
+				UE_LOG(LogTemp, Warning, TEXT("위치변경 NearestCoverActor: %s"), *NearestCoverActor->GetName());
 				MoveToLocation(NearestCoverActor->GetActorLocation(), 100.f);
 				CurrentCoverActor = Hit.GetActor();
+
+				return;
 			}
 		}
 	}
-
-
-
 }

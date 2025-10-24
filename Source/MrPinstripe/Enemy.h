@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "NiagaraSystem.h"
 #include "NiagaraComponent.h"
+#include "Sound//SoundCue.h"
 #include "GameFramework/Character.h"
 #include "MrPinstripeCharacter.h"
 #include "Enemy.generated.h"
@@ -117,10 +118,16 @@ public:
 
 	bool IsReadyToShot;	// 플레이어와 적 사이에 장애물이 없으면 발포하게 해주는 플래그, IsDetectedPlayer가 True일 때만 이를 검사
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float FireTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	USoundCue* FireSoundCue;
+
+
 private:
 	int CurrentAmmo;
-
-	float FireTime;
 
 	float FireRateTiming;	// FireTime이 이 변수 이상이 되면 총을 발사한다.
 
