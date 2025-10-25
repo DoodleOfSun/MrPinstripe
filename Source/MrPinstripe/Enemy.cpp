@@ -17,6 +17,8 @@ AEnemy::AEnemy()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	MoveAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("MoveAudioComponent"));
+	MoveAudioComponent->SetupAttachment(RootComponent);
 }
 
 // Called when the game starts or when spawned
@@ -77,6 +79,12 @@ void AEnemy::Init() {
 
 	FindingNiagara();
 	MuzzleFlameComponent->Deactivate();
+
+	MoveAudioComponent->SetSound(MoveSoundCue);
+	MoveAudioComponent->bAutoActivate = false;
+
+	MoveAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	MoveAudioComponent->RegisterComponent();
 }
 
 // Called every frame

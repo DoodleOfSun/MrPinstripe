@@ -50,6 +50,15 @@ void AEnemyAIController::Tick(float DeltaTime)
 			MoveToNextCoverLocation();
 		}
 	}
+
+	if (!ControlledEnemy->MoveAudioComponent->IsPlaying() && ControlledEnemy->GetVelocity().Size() != 0) {
+
+		ControlledEnemy->MoveAudioComponent->Play();
+	}
+	else if (ControlledEnemy->MoveAudioComponent->IsPlaying() && ControlledEnemy->GetVelocity().Size() == 0)
+	{
+		ControlledEnemy->MoveAudioComponent->Stop();
+	}
 }
 
 

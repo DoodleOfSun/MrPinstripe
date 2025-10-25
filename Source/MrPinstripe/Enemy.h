@@ -125,6 +125,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
 	USoundCue* FireSoundCue;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	USoundCue* MoveSoundCue;
+
+	UAudioComponent* MoveAudioComponent;
 
 private:
 	int CurrentAmmo;
