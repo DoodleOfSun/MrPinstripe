@@ -21,24 +21,25 @@ private:
 
 	AActor* CurrentCoverActor;
 
-	float CoverMoveTime = 0.f;
+	float MoveTime = 0.f;
 	float CoverMoveInterval = 10.f;	// 10초마다 엄폐물 위치를 바꾼다
+
+	float ChaseMoveInterval = 3.f; // 전문가형 적이 플레이어를 추적할 때 이동하는 간격
 
 public:
 	AEnemyAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void OnPossess(APawn* InPawn) override;
 
-
-	/*
-	virtual void OnUnPossess() override;
-	void BeginAI();
-	void StopAI();*/
-
-
-
 	virtual void Tick(float DeltaTime) override;
 
 	void MoveToNextCoverLocation();
 
+
+	void MoveForExpert();
+
+	void JumpToWall();
+	
+
+	void WallRunning();
 
 };

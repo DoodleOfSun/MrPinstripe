@@ -118,7 +118,7 @@ void AEnemy::FindingPlayerAndFocus() {
 
 void AEnemy::Firing(float DeltaTime) {
 
-	if (IsReadyToShot) {
+	if (IsReadyToShot && !IsWallRunning) {
 
 		FireTime += DeltaTime;
 
@@ -355,6 +355,11 @@ void AEnemy::CaculatingAimOffsetRotation(float DeltaTime) {
 		// 플레이어가 웅크렸을 때 Y축 오프셋을 하향 조정한다.
 		if (TargetPlayerCharacter->IsCrouched) {
 			AimOffsetVector.Y = FMath::FInterpTo(AimOffsetVector.Y, LookAtRot.Pitch - 50.f, DeltaTime, 2.2f);
+		}
+
+		// 플레이어가 떨어지는 중이 아니라면 Y축 오프셋을 기본값으로 복귀
+		else if (!TargetPlayerCharacter->GetCharacterMovement()->IsFalling()) {
+			AimOffsetVector.Y = FMath::FInterpTo(AimOffsetVector.Y, LookAtRot.Pitch, DeltaTime, 2.2f);
 		}
 
 	}
