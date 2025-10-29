@@ -118,8 +118,8 @@ void AEnemy::FindingPlayerAndFocus() {
 
 void AEnemy::Firing(float DeltaTime) {
 
-	//if (IsReadyToShot && !IsWallRunning) {
-	if (IsReadyToShot) {
+	if (IsReadyToShot && !IsWallRunning) {
+	//if (IsReadyToShot) {
 
 		FireTime += DeltaTime;
 
@@ -305,7 +305,7 @@ void AEnemy::TrackingPlayerByLineTrace()
 
 void AEnemy::CaculatingAimOffsetRotation(float DeltaTime) {
 
-	if (IsDetectedPlayer)
+	if (IsDetectedPlayer && !IsWallRunning)
 	{
 		FVector MyLocation = GetActorLocation();
 		FVector TargetLocation = TargetPlayerCharacter->GetActorLocation();

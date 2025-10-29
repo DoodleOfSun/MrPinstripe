@@ -19,7 +19,11 @@ class MRPINSTRIPE_API AEnemyAIController : public AAIController
 private:
 	bool IsCover = false;
 
+	bool IsJumpedForWallRunning = false; // 점프 함수 여러번 호출되는 것을 방지
+
 	AActor* CurrentCoverActor;
+	AActor* CurrentWallRunningActor;
+	FVector CurrentWallImpactNormal;
 
 	float MoveTime = 0.f;
 	float CoverMoveInterval = 10.f;	// 10초마다 엄폐물 위치를 바꾼다
@@ -32,15 +36,18 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
-	void MoveToNextCoverLocation();
+	void InitMoving();
 
+	void MoveToNextCoverLocation();
 
 	void MoveForExpert();
 
 	void JumpToWall();
 	
-
 	void WallRunning();
+
+	UFUNCTION(BlueprintCallable)
+	void WallJumping();
 
 	void DebugFindPath(AActor* FromActor, AActor* ToActor);
 

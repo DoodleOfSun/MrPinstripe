@@ -27,19 +27,21 @@ void AEnemyAIController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 	ControlledEnemy = Cast<AEnemy>(InPawn);
 
-	if (ControlledEnemy)
-	{
-		if (ControlledEnemy->GetName().Contains("Expert"))
-		{
-			MoveForExpert();
-		}
-		else
-		{
-			MoveToNextCoverLocation();
-		}
-	}
 
 	CurrentCoverActor = nullptr;
+	CurrentWallRunningActor = nullptr;
+	CurrentWallImpactNormal = FVector(0, 0, 0);
+
+	// 딜레이를 주고 이동 명령 실행
+	FTimerHandle DelayHandle;
+	GetWorld()->GetTimerManager().SetTimer(
+		DelayHandle,
+		this,
+		&AEnemyAIController::InitMoving,
+		0.2f, // 딜레이 시간 (초)
+		false
+	);
+
 }
 
 
@@ -59,12 +61,17 @@ void AEnemyAIController::Tick(float DeltaTime)
 		MoveTime += DeltaTime;
 
 		// 월러닝
-		if (ControlledEnemy->IsWallRunning) {
+		if (ControlledEnemy->IsWallRunning && !IsJumpedForWallRunning) {
 			MoveTime = 0.f;
 
 			JumpToWall();
 
+
 			return;
+		}
+
+		else if (IsJumpedForWallRunning) {
+			WallRunning();
 		}
 
 		// 일반 이동
@@ -117,6 +124,20 @@ void AEnemyAIController::Tick(float DeltaTime)
 	}
 }
 
+void AEnemyAIController::InitMoving() {
+
+	if (ControlledEnemy)
+	{
+		if (ControlledEnemy->GetName().Contains("Expert"))
+		{
+			MoveForExpert();
+		}
+		else
+		{
+			MoveToNextCoverLocation();
+		}
+	}
+}
 
 void AEnemyAIController::MoveToNextCoverLocation()
 {
@@ -179,6 +200,8 @@ void AEnemyAIController::MoveForExpert()
 // 주변 벽을 SphereTrace로 탐지하고 가장 가까운 벽을 향해 점프
 void AEnemyAIController::JumpToWall()
 {
+	IsJumpedForWallRunning = true;
+
 	TArray<FHitResult> HitResults;
 
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
@@ -197,6 +220,8 @@ void AEnemyAIController::JumpToWall()
 		true
 	);
 
+
+	AActor* NearestWallActor = nullptr;
 	float NearestDistance = 9999.f;
 
 	// 여러 개의 액터 중 가장 거리가 가까운 월 러닝 가능하며 이름이 WallRunningPlane을 포함하는 이름인 벽을 선택해 그 벽으로 점프
@@ -206,22 +231,112 @@ void AEnemyAIController::JumpToWall()
 		{
 			float Distance = FVector::Dist(ControlledEnemy->GetActorLocation(), Hit.GetActor()->GetActorLocation());
 			if (NearestDistance > Distance) {
-
+				NearestWallActor = Hit.GetActor();
+				CurrentWallImpactNormal = Hit.ImpactNormal;
+				NearestDistance = Distance;
 			}
 		}
 	}
 
+	if (NearestWallActor != nullptr)
+	{
+		CurrentWallRunningActor = NearestWallActor;
 
-	// 추락 중이 아니고 지면에 서 있을때 딱 한번 이 액터를 향해 점프
-	if (!ControlledEnemy->GetCharacterMovement()->IsFalling()) {
+		FVector DirectionWall = (CurrentWallRunningActor->GetActorLocation() - ControlledEnemy->GetActorLocation()).GetSafeNormal();
 
+		float JumpPower = 550.f;
+
+		float XDir = DirectionWall.X * JumpPower;
+		float YDir = DirectionWall.Y * JumpPower;
+
+		ControlledEnemy->LaunchCharacter(FVector(XDir, YDir, JumpPower), true, true);
 	}
 
 }
 
 void AEnemyAIController::WallRunning()
 {
-	UE_LOG(LogTemp,Warning,TEXT("안녕하세요저는월러닝"));
+	FHitResult HitResult;
+
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldStatic));
+	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldDynamic));
+
+	bool bHit = UKismetSystemLibrary::SphereTraceSingleForObjects(
+		GetWorld(),
+		ControlledEnemy->GetActorLocation(),
+		ControlledEnemy->GetActorLocation(),
+		45.f,
+		ObjectTypes,
+		false,
+		TArray<AActor*>(),
+		EDrawDebugTrace::None,
+		HitResult,
+		true
+	);
+
+
+	if (bHit && HitResult.GetActor()->GetActorLabel().Contains("WallRunning"))
+	{
+		FVector Forward = ControlledEnemy->GetActorForwardVector();
+
+		FVector Cross = FVector::CrossProduct(Forward, CurrentWallImpactNormal);
+		float DirectionSign = Cross.Z;
+
+		// 이 벽은 왼쪽에 있다
+		if (DirectionSign >= 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("나는 벽을 달릴 거에용! 왼쪽에 벽이 있네용"));
+			//DetectedWallSign = 1;
+			FRotator Rotation = FRotator(0.f, -90.f, 0.f);
+			FVector WallRunDir = Rotation.RotateVector(CurrentWallImpactNormal);
+			ControlledEnemy->LaunchCharacter(WallRunDir * 850.f, true, true);
+
+		}
+
+		// 이 벽은 오른쪽에 있다
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("나는 벽을 달릴 거에용! 오른쪽에 벽이 있네용"));
+			//DetectedWallSign = -1;
+			FRotator Rotation = FRotator(0.f, 90.f, 0.f);
+			FVector WallRunDir = Rotation.RotateVector(CurrentWallImpactNormal);
+			ControlledEnemy->LaunchCharacter(WallRunDir * 850.f, true, true);
+		}
+	}
+}
+
+void AEnemyAIController::WallJumping()
+{
+	UE_LOG(LogTemp, Warning, TEXT("월러닝을 그만 하고 싶습니다."));
+	if (IsJumpedForWallRunning)
+	{
+		ControlledEnemy->IsWallRunning = false;
+		IsJumpedForWallRunning = false;
+
+		FVector Forward = ControlledEnemy->GetActorForwardVector();
+
+		FVector Cross = FVector::CrossProduct(Forward, CurrentWallImpactNormal);
+		float DirectionSign = Cross.Z;
+
+		// 이 벽은 왼쪽에 있다
+		if (DirectionSign >= 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%.2f 왼쪽, 월러닝 그만 할게용 ㅎㅎ"), CurrentWallImpactNormal.Y);
+			FRotator Rotation = FRotator(0.f, -45.f, -50.f * CurrentWallImpactNormal.Y);
+			FVector WallJumpingDir = Rotation.RotateVector(CurrentWallImpactNormal);
+			ControlledEnemy->LaunchCharacter(WallJumpingDir * 1050.f, true, true);
+		}
+		// 이 벽은 오른쪽에 있다
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%.2f 오른쪽 월러닝 그만 할게용 ㅎㅎ"), CurrentWallImpactNormal.Y);
+			FRotator Rotation = FRotator(0.f, 45.f, -50.f * CurrentWallImpactNormal.Y);
+			FVector WallJumpingDir = Rotation.RotateVector(CurrentWallImpactNormal);
+			ControlledEnemy->LaunchCharacter(WallJumpingDir * 1050.f, true, true);
+		}
+
+	}
 }
 
 void AEnemyAIController::DebugFindPath(AActor* FromActor, AActor* ToActor)

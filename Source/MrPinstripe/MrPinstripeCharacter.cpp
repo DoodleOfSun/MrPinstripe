@@ -393,56 +393,6 @@ void AMrPinstripeCharacter::WallRunning(FVector WallLocation)
 	}
 }
 
-//void AMrPinstripeCharacter::WallJumping(FVector WallNormal)
-//{
-//	if (GetCharacterMovement()->IsFalling())
-//	{
-//		FVector Forward = GetActorForwardVector(); // 플레이어 전방
-//
-//		FVector Cross = FVector::CrossProduct(Forward, WallNormal);
-//		float DirectionSign = Cross.Z;
-//
-//		// 이 벽은 왼쪽에 있다
-//		if (DirectionSign >= 0)
-//		{
-//			UE_LOG(LogTemp, Warning, TEXT("%.2f 왼쪽"), WallNormal.Y);
-//
-//			FRotator Rotation = FRotator(0.f, 0.f, 0.f);
-//			if (WallNormal.Y >= 0) {
-//				Rotation = FRotator(0.f, -45.f, -50.f * 1);
-//			}
-//			else {
-//				Rotation = FRotator(0.f, -45.f, -50.f * -1);
-//			}
-//
-//			FVector WallJumpingDir = Rotation.RotateVector(WallNormal);
-//			LaunchCharacter(WallJumpingDir * 850.f, true, true);
-//		}
-//		// 이 벽은 오른쪽에 있다
-//		else
-//		{
-//			UE_LOG(LogTemp, Warning, TEXT("%.2f 오른쪽"), WallNormal.Y);
-//
-//			FRotator Rotation = FRotator(0.f, 0.f, 0.f);
-//			if (WallNormal.Y >= 0) {
-//				Rotation = FRotator(0.f, -45.f, -50.f * 1);
-//			}
-//			else {
-//				Rotation = FRotator(0.f, -45.f, -50.f * -1);
-//			}
-//
-//
-//
-//			FRotator Rotation = FRotator(0.f, 45.f, -50.f * WallNormal.Y);
-//			FVector WallJumpingDir = Rotation.RotateVector(WallNormal);
-//			LaunchCharacter(WallJumpingDir * 850.f, true, true);
-//		}
-//	}
-//
-//}
-
-
-
 void AMrPinstripeCharacter::WallJumping(FVector WallNormal)
 {
 	if (GetCharacterMovement()->IsFalling())
