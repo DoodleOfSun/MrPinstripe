@@ -42,4 +42,6 @@ public:
 
 	void WallRunning();
 
+	void DebugFindPath(AActor* FromActor, AActor* ToActor);
+
 };

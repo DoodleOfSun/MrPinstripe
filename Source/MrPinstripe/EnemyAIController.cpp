@@ -10,6 +10,12 @@
 #include "GameFramework/CharacterMovementComponent.h"
 
 
+#include "NavigationSystem.h"
+#include "NavMesh/RecastNavMesh.h"
+#include "NavigationPath.h"
+#include "AI/Navigation/NavigationTypes.h"
+
+
 AEnemyAIController::AEnemyAIController(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
@@ -120,6 +126,7 @@ void AEnemyAIController::MoveToNextCoverLocation()
 
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
 	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldDynamic));
+	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldStatic));
 
 	bool bHit = UKismetSystemLibrary::SphereTraceMultiForObjects(
 		GetWorld(),
@@ -140,21 +147,26 @@ void AEnemyAIController::MoveToNextCoverLocation()
 	// 여러 개의 엄폐물 중 하나 선택해서 이동
 	for (const FHitResult& Hit : HitResults)
 	{
-		if (Hit.GetActor() && Hit.GetActor()->GetActorLabel().Contains("Cover") && Hit.GetActor() != CurrentCoverActor)
+		if (Hit.GetActor() && Hit.GetActor()->GetActorLabel().Contains("Cover") && Hit.GetActor() != CurrentCoverActor && Hit.GetActor() != NearestCoverActor)
 		{
 			float Distance = FVector::Dist(ControlledEnemy->GetActorLocation(), Hit.GetActor()->GetActorLocation());
 			if (NearestDistance > Distance) {
 				NearestCoverActor = Hit.GetActor();
 				NearestDistance = Distance;
-
-				UE_LOG(LogTemp, Warning, TEXT("위치변경 NearestCoverActor: %s"), *NearestCoverActor->GetName());
-				MoveToLocation(NearestCoverActor->GetActorLocation(), 100.f);
-				CurrentCoverActor = Hit.GetActor();
-
-				return;
 			}
 		}
 	}
+	
+	if (NearestCoverActor != nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("위치변경 NearestCoverActor: %s"), *NearestCoverActor->GetActorLabel());
+		MoveToActor(NearestCoverActor, 65.f);
+
+		DebugFindPath(ControlledEnemy, NearestCoverActor);
+
+		CurrentCoverActor = NearestCoverActor;
+	}
+
 }
 
 // Expert라는 이름이 붙은 객체는 플레이어를 쫓아 움직인다
@@ -195,14 +207,14 @@ void AEnemyAIController::JumpToWall()
 			float Distance = FVector::Dist(ControlledEnemy->GetActorLocation(), Hit.GetActor()->GetActorLocation());
 			if (NearestDistance > Distance) {
 
-				// 추락 중이 아니고 지면에 서 있을때 딱 한번 이 액터를 향해 점프
-				if (!ControlledEnemy->GetCharacterMovement()->IsFalling()) {
-					
-				}
-
-				return;
 			}
 		}
+	}
+
+
+	// 추락 중이 아니고 지면에 서 있을때 딱 한번 이 액터를 향해 점프
+	if (!ControlledEnemy->GetCharacterMovement()->IsFalling()) {
+
 	}
 
 }
@@ -212,3 +224,55 @@ void AEnemyAIController::WallRunning()
 	UE_LOG(LogTemp,Warning,TEXT("안녕하세요저는월러닝"));
 }
 
+void AEnemyAIController::DebugFindPath(AActor* FromActor, AActor* ToActor)
+{
+	if (!FromActor || !ToActor) {
+		UE_LOG(LogTemp, Warning, TEXT("DebugFindPath: null actor"));
+		return;
+	}
+
+	UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
+	if (!NavSys) {
+		UE_LOG(LogTemp, Error, TEXT("NavSys null"));
+		return;
+	}
+
+	const FVector Start = FromActor->GetActorLocation();
+	const FVector End = ToActor->GetActorLocation();
+
+	FPathFindingQuery Query;
+	const ANavigationData* NavData = NavSys->GetDefaultNavDataInstance(FNavigationSystem::DontCreate);
+	Query = FPathFindingQuery(this, *NavData, Start, End);
+
+	FPathFindingResult PFResult = NavSys->FindPathSync(Query);
+
+	UE_LOG(LogTemp, Warning, TEXT("FindPathSync Result: %d"), (int)PFResult.Result);
+	if (PFResult.Path.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Path valid. Point count: %d, Path length: %f"), PFResult.Path->GetPathPoints().Num(), PFResult.Path->GetLength());
+		for (int32 i = 0; i < PFResult.Path->GetPathPoints().Num(); ++i)
+		{
+			FVector P = PFResult.Path->GetPathPoints()[i].Location;
+			UE_LOG(LogTemp, Warning, TEXT("Point %d: %s"), i, *P.ToCompactString());
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Path invalid or null"));
+	}
+
+
+
+
+	FNavLocation Projected;
+	bool bProjected = NavSys->ProjectPointToNavigation(
+		ToActor->GetActorLocation(),
+		Projected,
+		FVector(50, 50, 200)
+	);
+
+	UE_LOG(LogTemp, Warning, TEXT("Projected on Nav: %d, ProjectedLoc: %s"),
+		bProjected, *Projected.Location.ToCompactString());
+
+
+}

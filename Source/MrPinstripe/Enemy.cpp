@@ -118,7 +118,8 @@ void AEnemy::FindingPlayerAndFocus() {
 
 void AEnemy::Firing(float DeltaTime) {
 
-	if (IsReadyToShot && !IsWallRunning) {
+	//if (IsReadyToShot && !IsWallRunning) {
+	if (IsReadyToShot) {
 
 		FireTime += DeltaTime;
 
@@ -280,6 +281,7 @@ void AEnemy::TrackingPlayerByLineTrace()
 	FCollisionObjectQueryParams ObjectQueryParams;
 	ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
 	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
