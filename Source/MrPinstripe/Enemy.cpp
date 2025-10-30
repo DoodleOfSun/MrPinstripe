@@ -151,7 +151,6 @@ void AEnemy::FindingPlayerAndFocus() {
 void AEnemy::Firing(float DeltaTime) {
 
 	if (IsReadyToShot && !IsWallRunning && !GetCharacterMovement()->IsFalling() && GetVelocity().Size() == 0) {
-	//if (IsReadyToShot) {
 
 		FireTime += DeltaTime;
 
@@ -332,6 +331,8 @@ void AEnemy::TrackingPlayerByLineTrace()
 void AEnemy::CaculatingAimOffsetRotation(float DeltaTime) {
 
 	if (IsDetectedPlayer && !IsWallRunning && !GetCharacterMovement()->IsFalling())
+
+	//if (IsDetectedPlayer)
 	{
 		FVector MyLocation = GetActorLocation();
 		FVector TargetLocation = TargetPlayerCharacter->GetActorLocation();
@@ -392,7 +393,6 @@ void AEnemy::CaculatingAimOffsetRotation(float DeltaTime) {
 
 	}
 	else {
-
 		AimOffsetVector.X = FMath::FInterpTo(AimOffsetVector.X, 0.f, DeltaTime, 2.2f);
 		AimOffsetVector.Y = FMath::FInterpTo(AimOffsetVector.Y, 0.5f, DeltaTime, 2.2f);
 		AimOffsetVector.Z = FMath::FInterpTo(AimOffsetVector.Z, 0.f, DeltaTime, 2.2f);

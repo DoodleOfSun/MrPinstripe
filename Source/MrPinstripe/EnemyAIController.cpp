@@ -193,7 +193,7 @@ void AEnemyAIController::MoveToNextCoverLocation()
 // Expert라는 이름이 붙은 객체는 플레이어를 쫓아 움직인다
 void AEnemyAIController::MoveForExpert()
 {
-	MoveToActor(ControlledEnemy->TargetPlayerCharacter, 200.f);
+	MoveToActor(ControlledEnemy->TargetPlayerCharacter, 600.f);
 }
 
 

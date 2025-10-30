@@ -17,6 +17,6 @@ void AJumpProxy::Jump(AActor* MovingActor, const FVector& DestinationPoint)
 	ACharacter* Character = Cast<ACharacter>(MovingActor);
 	if (Character)
 	{
-		Character->LaunchCharacter(FVector(0.f, 0.f, 600.f), false, true);
+		Character->LaunchCharacter(FVector(0.f, 0.f, 450.f), false, true);
 	}
 }
