@@ -279,15 +279,15 @@ void AEnemyAIController::WallRunning()
 	if (bHit && HitResult.GetActor()->GetActorLabel().Contains("WallRunning"))
 	{
 		FVector Forward = ControlledEnemy->GetActorForwardVector();
-
+		ControlledEnemy->IsWallRunningForAnimation = true;
+		CurrentWallImpactNormal = HitResult.ImpactNormal;
 		FVector Cross = FVector::CrossProduct(Forward, CurrentWallImpactNormal);
 		float DirectionSign = Cross.Z;
 
 		// 이 벽은 왼쪽에 있다
 		if (DirectionSign >= 0)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("나는 벽을 달릴 거에용! 왼쪽에 벽이 있네용"));
-			//DetectedWallSign = 1;
+			DetectedWallSign = 1;
 			FRotator Rotation = FRotator(0.f, -90.f, 0.f);
 			FVector WallRunDir = Rotation.RotateVector(CurrentWallImpactNormal);
 			ControlledEnemy->LaunchCharacter(WallRunDir * 850.f, true, true);
@@ -297,8 +297,7 @@ void AEnemyAIController::WallRunning()
 		// 이 벽은 오른쪽에 있다
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("나는 벽을 달릴 거에용! 오른쪽에 벽이 있네용"));
-			//DetectedWallSign = -1;
+			DetectedWallSign = -1;
 			FRotator Rotation = FRotator(0.f, 90.f, 0.f);
 			FVector WallRunDir = Rotation.RotateVector(CurrentWallImpactNormal);
 			ControlledEnemy->LaunchCharacter(WallRunDir * 850.f, true, true);
@@ -309,10 +308,13 @@ void AEnemyAIController::WallRunning()
 void AEnemyAIController::WallJumping()
 {
 	UE_LOG(LogTemp, Warning, TEXT("월러닝을 그만 하고 싶습니다."));
+	DetectedWallSign = 0;
 	if (IsJumpedForWallRunning)
 	{
 		ControlledEnemy->IsWallRunning = false;
 		IsJumpedForWallRunning = false;
+		ControlledEnemy->IsWallRunningForAnimation = false;
+		
 
 		FVector Forward = ControlledEnemy->GetActorForwardVector();
 
@@ -322,7 +324,6 @@ void AEnemyAIController::WallJumping()
 		// 이 벽은 왼쪽에 있다
 		if (DirectionSign >= 0)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("%.2f 왼쪽, 월러닝 그만 할게용 ㅎㅎ"), CurrentWallImpactNormal.Y);
 			FRotator Rotation = FRotator(0.f, -45.f, -50.f * CurrentWallImpactNormal.Y);
 			FVector WallJumpingDir = Rotation.RotateVector(CurrentWallImpactNormal);
 			ControlledEnemy->LaunchCharacter(WallJumpingDir * 1050.f, true, true);
@@ -330,7 +331,6 @@ void AEnemyAIController::WallJumping()
 		// 이 벽은 오른쪽에 있다
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("%.2f 오른쪽 월러닝 그만 할게용 ㅎㅎ"), CurrentWallImpactNormal.Y);
 			FRotator Rotation = FRotator(0.f, 45.f, -50.f * CurrentWallImpactNormal.Y);
 			FVector WallJumpingDir = Rotation.RotateVector(CurrentWallImpactNormal);
 			ControlledEnemy->LaunchCharacter(WallJumpingDir * 1050.f, true, true);

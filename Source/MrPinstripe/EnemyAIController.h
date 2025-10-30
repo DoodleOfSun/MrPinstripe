@@ -51,4 +51,8 @@ public:
 
 	void DebugFindPath(AActor* FromActor, AActor* ToActor);
 
+
+	UPROPERTY(BlueprintReadWrite)
+	int DetectedWallSign = 0;
+
 };

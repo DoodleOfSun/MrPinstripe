@@ -16,6 +16,7 @@ enum class EEnemyCombatState : uint8
 	Scouting,
 	Reloading,
 	Jump,
+	Falling,
 	Crouch,
 	WallRunning,
 	Die
@@ -35,8 +36,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Init();
 
-	UFUNCTION(BlueprintCallable)
-	void Scouting(FVector ScoutPos);
+	void AnimationControl();
+
+	void Scouting();
+
+	void Jump();
 
 	UFUNCTION(BlueprintCallable)
 	void Standing();
@@ -56,7 +60,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	float GetCurrentVelocity();
 
-	UFUNCTION(BlueprintCallable)
+	void Falling();
+
 	void WallRunning();
 
 	UFUNCTION(BlueprintCallable)
@@ -130,6 +135,8 @@ public:
 
 	UAudioComponent* MoveAudioComponent;
 
+	bool IsWallRunningForAnimation;
+
 private:
 	int CurrentAmmo;
 
@@ -140,4 +147,6 @@ private:
 	int MissBullet;
 
 	float TrackingTraceTime;
+
+	EEnemyCombatState LastCombatState;
 };

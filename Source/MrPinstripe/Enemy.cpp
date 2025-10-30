@@ -36,6 +36,7 @@ void AEnemy::Init() {
 	IsCrouching = false;
 	IsDetectedPlayer = false;
 	IsReadyToShot = false;
+	IsWallRunningForAnimation = false;
 
 	TArray<AActor*> FoundActors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AMrPinstripeCharacter::StaticClass(), FoundActors);
@@ -94,10 +95,41 @@ void AEnemy::Tick(float DeltaTime)
 	DetectingPlayerByDistance(DeltaTime);
 	CaculatingAimOffsetRotation(DeltaTime);
 	Firing(DeltaTime);
+	AnimationControl();
 }
 
-void AEnemy::Scouting(FVector ScoutPos){
+void AEnemy::AnimationControl()
+{
+	if (GetCharacterMovement()->IsFalling()) {
+		if (IsWallRunningForAnimation) {
+			WallRunning();
+		}
+		else
+		{
+			Jump();
+		}
+	}
+	else
+	{
+		Scouting();
+	}
+}
+
+
+void AEnemy::Scouting(){
 	EnemyState = EEnemyCombatState::Scouting;
+}
+
+void AEnemy::Jump() {
+	EnemyState = EEnemyCombatState::Jump;
+}
+
+void AEnemy::WallRunning() {
+	EnemyState = EEnemyCombatState::WallRunning;
+}
+
+void AEnemy::Falling() {
+	EnemyState = EEnemyCombatState::Falling;
 }
 
 void AEnemy::Standing() {
@@ -118,13 +150,12 @@ void AEnemy::FindingPlayerAndFocus() {
 
 void AEnemy::Firing(float DeltaTime) {
 
-	if (IsReadyToShot && !IsWallRunning) {
+	if (IsReadyToShot && !IsWallRunning && !GetCharacterMovement()->IsFalling() && GetVelocity().Size() == 0) {
 	//if (IsReadyToShot) {
 
 		FireTime += DeltaTime;
 
 		if (FireTime >= FireRateTiming) {
-
 
 			UE_LOG(LogTemp, Warning, TEXT("플레이어를 발견하여 사격 중. 파이어타임 : %.2f"), FireTime);
 			FireTime = 0.f;
@@ -219,17 +250,12 @@ void AEnemy::Firing(float DeltaTime) {
 	}
 }
 
-float AEnemy::GetCurrentVelocity() {
-	static float SmoothedSpeed = 0.f;
-	float CurrentSpeed = GetVelocity().Size() * 0.85;
-	SmoothedSpeed = FMath::FInterpTo(SmoothedSpeed, CurrentSpeed, GetWorld()->GetDeltaSeconds(), 5.7f);
-	return SmoothedSpeed;
+float AEnemy::GetCurrentVelocity()
+{
+	return GetVelocity().Size();
 }
 
 
-void AEnemy::WallRunning() {
-
-}
 
 void AEnemy::Damaged() {
 
@@ -305,7 +331,7 @@ void AEnemy::TrackingPlayerByLineTrace()
 
 void AEnemy::CaculatingAimOffsetRotation(float DeltaTime) {
 
-	if (IsDetectedPlayer && !IsWallRunning)
+	if (IsDetectedPlayer && !IsWallRunning && !GetCharacterMovement()->IsFalling())
 	{
 		FVector MyLocation = GetActorLocation();
 		FVector TargetLocation = TargetPlayerCharacter->GetActorLocation();
@@ -347,7 +373,7 @@ void AEnemy::CaculatingAimOffsetRotation(float DeltaTime) {
 
 		// 플레이어는 감지되었으나 후방으로 벗어난 경우 (Dot이 0 이하)
 		// 객체를 천천히 플레이어를 향해 돌린다.
-		else
+		else if(!GetCharacterMovement()->IsFalling())
 		{
 			SetActorRelativeRotation(FMath::RInterpTo(GetActorRotation(), LookAtRot, DeltaTime, 1.2f));
 		}
