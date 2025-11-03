@@ -19,6 +19,7 @@ enum class EEnemyCombatState : uint8
 	Falling,
 	Crouch,
 	WallRunning,
+	Hit,
 	Die
 };
 
@@ -65,7 +66,7 @@ public:
 	void WallRunning();
 
 	UFUNCTION(BlueprintCallable)
-	void Damaged();
+	void Damaged(float ReceivedDamage);
 
 	UFUNCTION(BlueprintCallable)
 	void Die();

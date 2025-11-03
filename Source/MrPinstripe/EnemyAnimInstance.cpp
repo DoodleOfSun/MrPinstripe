@@ -29,3 +29,8 @@ EEnemyCombatState UEnemyAnimInstance::GetEnemyCombatState() {
 		return EEnemyCombatState::Scouting;
 	}
 }
+
+void UEnemyAnimInstance::SetCharacterCombatState(EEnemyCombatState StateData)
+{
+	EnemyInstance->EnemyState = StateData;
+}

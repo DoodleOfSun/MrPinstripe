@@ -29,6 +29,9 @@ public :
 	float GetCharacterVelocity();
 
 	UFUNCTION(BlueprintCallable)
+	void SetCharacterCombatState(EEnemyCombatState StateData);
+
+	UFUNCTION(BlueprintCallable)
 	EEnemyCombatState GetEnemyCombatState();
 
 };

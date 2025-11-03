@@ -9,6 +9,7 @@
 #include "NiagaraSystem.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
+#include "Enemy.h"
 
 
 // Sets default values for this component's properties
@@ -48,9 +49,9 @@ void UCustomWeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 }
 
 // 타입에 따라 발사 로직을 다르게 한다
-void UCustomWeaponComponent::FireLogic(FString WeaponString)
+void UCustomWeaponComponent::FireLogic()
 {
-	if (WeaponString.Equals("Shotgun"))
+	if (EquipedWeaponString.Equals("Shotgun"))
 	{
 		ShotGunFire();
 	}
@@ -85,10 +86,16 @@ void UCustomWeaponComponent::NormalFire()
 		FVector StartTrace = cam->GetComponentLocation();
 		FVector EndTrace = StartTrace + (cam->GetForwardVector() * 10000);
 		DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Green, false, 5.0f);
-		GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_Visibility);
+
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(Character); // 자기 자신 무시
+
+		GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_GameTraceChannel1, Params);
 
 		if (Hit.GetActor() != nullptr) {
 			UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *Hit.GetActor()->GetName());
+
+			CallingEnemyDamageFunc(Hit);
 		}
 		else if (Hit.GetActor() == nullptr) {
 
@@ -107,13 +114,18 @@ void UCustomWeaponComponent::NormalFire()
 		float SpreadAngle = 5.0f; // 퍼짐 각도 (도 단위)
 		FVector RandomSpread = FMath::VRandCone(cam->GetForwardVector(), FMath::DegreesToRadians(SpreadAngle));
 
-
 		FVector EndTrace = StartTrace + (RandomSpread * 10000);
 		DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Green, false, 5.0f);
-		GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_Visibility);
+
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(Character); // 자기 자신 무시
+
+		GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_GameTraceChannel1, Params);
 
 		if (Hit.GetActor() != nullptr) {
 			UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *Hit.GetActor()->GetName());
+
+			CallingEnemyDamageFunc(Hit);
 		}
 		else if (Hit.GetActor() == nullptr) {
 
@@ -123,6 +135,7 @@ void UCustomWeaponComponent::NormalFire()
 }
 
 // 샷건 팰릿 구현
+// 아직 미완성
 void UCustomWeaponComponent::ShotGunFire()
 {
 	TArray<FHitResult> HitResultList;
@@ -165,6 +178,25 @@ void UCustomWeaponComponent::ShotGunFire()
 			UE_LOG(LogTemp, Warning, TEXT("샷건 발사 : 지향사격을 하고 쏘았으나 GetActor가 nullptr임."));
 		}
 		HitResultList.Add(Hit);
+	}
+}
+
+// 이 함수는 블루프린트에서 호출한다.
+// 전달받은 데미지로 WeaponDamagePerBullet 값을 설정	
+void UCustomWeaponComponent::SetThisWeaponDamage(float Damage)
+{
+	WeaponDamagePerBullet = Damage;
+}
+
+// 피격당한 적 객체의 데미지 함수 호출
+void UCustomWeaponComponent::CallingEnemyDamageFunc(FHitResult Hit)
+{
+	AEnemy* HitEnemy = Cast<AEnemy>(Hit.GetActor());
+
+	if (HitEnemy != nullptr) {
+
+		UE_LOG(LogTemp, Warning, TEXT("적에게 데미지를 가함"));
+		HitEnemy->Damaged(WeaponDamagePerBullet);
 	}
 }
 

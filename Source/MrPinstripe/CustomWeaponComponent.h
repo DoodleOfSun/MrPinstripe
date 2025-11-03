@@ -42,7 +42,7 @@ public:
 
 	// 무기 발사 로직
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void FireLogic(FString WeaponString);
+	void FireLogic();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void NormalFire();
@@ -63,9 +63,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString EquipedWeaponString;
 
+	UFUNCTION(BlueprintCallable)
+	void SetThisWeaponDamage(float Damage);
+
+private :
+
+	float WeaponDamagePerBullet = 0;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+
+	void CallingEnemyDamageFunc(FHitResult Hit);
 
 public:	
 	// Called every frame

@@ -86,16 +86,22 @@ void AEnemy::Init() {
 
 	MoveAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	MoveAudioComponent->RegisterComponent();
+
+	HP = 100.f;
 }
 
 // Called every frame
 void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	DetectingPlayerByDistance(DeltaTime);
-	CaculatingAimOffsetRotation(DeltaTime);
-	Firing(DeltaTime);
-	AnimationControl();
+	if (EnemyState != EEnemyCombatState::Die && EnemyState != EEnemyCombatState::Hit) {
+		DetectingPlayerByDistance(DeltaTime);
+		CaculatingAimOffsetRotation(DeltaTime);
+		AnimationControl();
+		Firing(DeltaTime);
+	}
+
+	Die();
 }
 
 void AEnemy::AnimationControl()
@@ -231,8 +237,6 @@ void AEnemy::Firing(float DeltaTime) {
 
 					UE_LOG(LogTemp, Warning, TEXT("적의 공격, GetActor가 nullptr임."));
 				}
-
-
 			}
 
 
@@ -256,12 +260,22 @@ float AEnemy::GetCurrentVelocity()
 
 
 
-void AEnemy::Damaged() {
-
+void AEnemy::Damaged(float ReceivedDamage) {
+	EnemyState = EEnemyCombatState::Hit;
+	HP -= ReceivedDamage;
 }
 
+// 현재 체력을 Tick에서 계속 확인하며 0 이하면 이 캐릭터는 죽는다
+// 죽는다는 것은 다음을 의미하는 것으로 정의한다.
+// 1. 체력이 0 이하가 되었다.
+// 2. 체력이 0이 되면 State를 Die로 변경한다.
+// 3. ABP에서 해당 애니메이션을 재생한다.
+// 4. 캐릭터를 10초 후 월드에서 삭제한다.
 void AEnemy::Die() {
-
+	if (HP <= 0.f && EnemyState != EEnemyCombatState::Die) {
+		EnemyState = EEnemyCombatState::Die;
+		SetLifeSpan(3.f);
+	}
 }
 
 void AEnemy::FindingCoverObject(float DeltaTime) {

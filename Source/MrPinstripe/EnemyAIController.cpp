@@ -49,13 +49,43 @@ void AEnemyAIController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	EnemyMovingLogic(DeltaTime);
+
+	if (!ControlledEnemy->MoveAudioComponent->IsPlaying() && ControlledEnemy->GetVelocity().Size() != 0 && !ControlledEnemy->GetCharacterMovement()->IsFalling()) {
+
+		ControlledEnemy->MoveAudioComponent->Play();
+	}
+	else if (ControlledEnemy->MoveAudioComponent->IsPlaying() && ControlledEnemy->GetVelocity().Size() == 0 || ControlledEnemy->GetCharacterMovement()->IsFalling())
+	{
+		ControlledEnemy->MoveAudioComponent->Stop();
+	}
+}
+
+void AEnemyAIController::InitMoving() {
+
+	if (ControlledEnemy && ControlledEnemy->EnemyState != EEnemyCombatState::Die && ControlledEnemy->EnemyState != EEnemyCombatState::Hit)
+	{
+		if (ControlledEnemy->GetName().Contains("Expert"))
+		{
+			MoveForExpert();
+		}
+		else
+		{
+			MoveToNextCoverLocation();
+		}
+	}
+}
+
+void AEnemyAIController::EnemyMovingLogic(float DeltaTime) {
+
 	// 플레이어가 일정 거리에 들어오면 IsDetectedPlayer가 True가 된다
 	// 또 적이 플레이어에게 레이트레이스를 쏘았을때 충돌 여부에 따라 IsReadyToShot이 True가 되는데 이것으로 위치를 옮길지를 판단한다.
 	// 단, 이 로직은 10초마다 검사하도록 한다. 적이 항상 이동을 하는 것은 부자연스럽기 때문이다.
 	// 이동을 방지하겠다면 단순히 CoverMoveTime으로 판단하는 조건문을 없애고 1번만 실행시키게 할 것.
-	
+
 	// 객체의 이름에 따라 움직임 타입을 다르게 한다.
 	// 만약 Expert라는 이름이 붙은 객체라면, 플레이어를 쫓아 움직이며, 월 러닝 플래그가 true가 되면 이 기능을 멈추어야 한다.
+
 	if (ControlledEnemy->GetName().Contains("Expert"))
 	{
 		MoveTime += DeltaTime;
@@ -111,32 +141,6 @@ void AEnemyAIController::Tick(float DeltaTime)
 		}
 	}
 
-
-
-
-	if (!ControlledEnemy->MoveAudioComponent->IsPlaying() && ControlledEnemy->GetVelocity().Size() != 0) {
-
-		ControlledEnemy->MoveAudioComponent->Play();
-	}
-	else if (ControlledEnemy->MoveAudioComponent->IsPlaying() && ControlledEnemy->GetVelocity().Size() == 0)
-	{
-		ControlledEnemy->MoveAudioComponent->Stop();
-	}
-}
-
-void AEnemyAIController::InitMoving() {
-
-	if (ControlledEnemy)
-	{
-		if (ControlledEnemy->GetName().Contains("Expert"))
-		{
-			MoveForExpert();
-		}
-		else
-		{
-			MoveToNextCoverLocation();
-		}
-	}
 }
 
 void AEnemyAIController::MoveToNextCoverLocation()

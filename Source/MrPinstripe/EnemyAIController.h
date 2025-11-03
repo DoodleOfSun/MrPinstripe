@@ -30,6 +30,8 @@ private:
 
 	float ChaseMoveInterval = 3.f; // 전문가형 적이 플레이어를 추적할 때 이동하는 간격
 
+	void EnemyMovingLogic(float DeltaTime);
+
 public:
 	AEnemyAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void OnPossess(APawn* InPawn) override;
