@@ -194,6 +194,12 @@ void AEnemy::Firing(float DeltaTime) {
 
 				if (Hit.GetActor() != nullptr) {
 					UE_LOG(LogTemp, Warning, TEXT("Hit Actor: 적의 공격 %s"), *Hit.GetActor()->GetName());
+
+					AMrPinstripeCharacter* HitPlayer = Cast<AMrPinstripeCharacter>(Hit.GetActor());
+					if (HitPlayer) {
+						UE_LOG(LogTemp, Warning, TEXT("적의 공격이 플레이어를 적중시켰습니다."));
+						HitPlayer->Damaged(25.f);
+					}
 				}
 				else if (Hit.GetActor() == nullptr) {
 
@@ -232,14 +238,19 @@ void AEnemy::Firing(float DeltaTime) {
 
 				if (Hit.GetActor() != nullptr) {
 					UE_LOG(LogTemp, Warning, TEXT("Hit Actor, 적의 공격: %s"), *Hit.GetActor()->GetName());
+
+					AMrPinstripeCharacter* HitPlayer = Cast<AMrPinstripeCharacter>(Hit.GetActor());
+					if (HitPlayer) {
+						UE_LOG(LogTemp, Warning, TEXT("적의 공격이 플레이어를 적중시켰습니다."));
+						HitPlayer->Damaged(25.f);
+					}
+
 				}
 				else if (Hit.GetActor() == nullptr) {
 
 					UE_LOG(LogTemp, Warning, TEXT("적의 공격, GetActor가 nullptr임."));
 				}
 			}
-
-
 
 			// 효과 재생
 			MuzzleFlameComponent->Activate(true);

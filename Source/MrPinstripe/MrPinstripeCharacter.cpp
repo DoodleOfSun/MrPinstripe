@@ -16,6 +16,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Materials/MaterialParameterCollection.h"
+#include "Materials/MaterialParameterCollectionInstance.h"
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -47,6 +49,9 @@ AMrPinstripeCharacter::AMrPinstripeCharacter()
 
 void AMrPinstripeCharacter::BeginPlay()
 {
+	// Call the base class  
+	Super::BeginPlay();
+
 
 	TArray<UCameraComponent*> CameraComponents;
 	GetComponents<UCameraComponent>(CameraComponents);
@@ -75,8 +80,6 @@ void AMrPinstripeCharacter::BeginPlay()
 	UE_LOG(LogTemp, Warning, TEXT("My Name is %s"), *FPSCamera->GetName());
 	UE_LOG(LogTemp, Warning, TEXT("My Name is %s"), *ArmMesh->GetName());
 
-	// Call the base class  
-	Super::BeginPlay();
 
 	IsCrouched = false;
 	IsDashing = false;
@@ -100,6 +103,17 @@ void AMrPinstripeCharacter::BeginPlay()
 
 	CurrentWallNormal = FVector(0.f, 0.f, 0.f);
 	DetectedWallSign = 0;
+
+	HP = 100.f;
+
+	HealingDelayTimer = 0.f;
+	HealingTimer = 0.f;
+	ScalarRadiusValue = 2.f;
+
+	MPCInstance = GetWorld()->GetParameterCollectionInstance(MPCObj);
+
+	MPCInstance->SetScalarParameterValue(FName("Radius"), ScalarRadiusValue);
+
 }
 
 
@@ -459,3 +473,38 @@ void AMrPinstripeCharacter::TiltWhileWallRunning(float DeltaTime)
 	}
 }
 
+// 시간에 따라 체력 회복
+void AMrPinstripeCharacter::HealingByTime(float DeltaTime)
+{
+	
+}
+
+// 데미지 처리 함수
+void AMrPinstripeCharacter::Damaged(float DamageAmount)
+{
+	HP -= DamageAmount;
+	
+	if (HP <= 25) {
+		MPCInstance->SetScalarParameterValue(FName("Radius"), 0.8f);
+	}
+	else if (HP <= 45) {
+
+		MPCInstance->SetScalarParameterValue(FName("Radius"), 1.1f);
+	}
+	else if (HP <= 65)
+	{
+		MPCInstance->SetScalarParameterValue(FName("Radius"), 1.3f);
+	}
+
+	if (HP <= 0.f)
+	{
+		Die();
+	}
+}
+
+// 사망 처리 함수
+void AMrPinstripeCharacter::Die()
+{
+	UE_LOG(LogTemp, Warning, TEXT("플레이어가 사망했습니다."));
+	// 사망 시 처리 로직 추가 (예: 게임 오버 화면 표시, 리스폰 등)
+}

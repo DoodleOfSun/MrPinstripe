@@ -37,7 +37,6 @@ void AMrPinstripeGameMode::BeginPlay()
 		{
 			CrosshairWidget->RemoveFromParent();
 		}
-
 	}
 
 	// 메인화면 시

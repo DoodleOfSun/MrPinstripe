@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Materials/MaterialParameterCollection.h"
+#include "Materials/MaterialParameterCollectionInstance.h"
+
 #include "Logging/LogMacros.h"
 #include "MrPinstripeCharacter.generated.h"
 
@@ -56,6 +59,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsWallRunning;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float HP;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UMaterialParameterCollection* MPCObj;
 
 	UCameraComponent* GetFPSCamera() const { return FPSCamera; }
 
@@ -93,6 +102,10 @@ protected:
 	void TiltWhileWallRunning(float DeltaTime);
 	void WallJumping(FVector WallNormal);
 
+	void HealingByTime(float DeltaTime);
+
+	void Die();
+
 protected:
 	/** Mesh for Physical Calculating */
 	USkeletalMeshComponent* ArmMesh;
@@ -100,6 +113,14 @@ protected:
 	/** Camera for Physical Calculating */
 	UCameraComponent* FPSCamera;
 
+	// 포스트 프로세스 볼륨 머터리얼에 적용하는 스칼라 파라메터 콜렉션 객체
+	// 이 콜렉션 값을 조절하여 체력이 낮아질 수록 화면을 빨갛게 함
+	UMaterialParameterCollectionInstance* MPCInstance;
+
+	float HealingDelayTimer;
+	float HealingTimer;
+
+	float ScalarRadiusValue;
 public:
 
 	/** Returns Mesh1P subobject **/
@@ -126,7 +147,7 @@ public:
 	FVector CurrentWallNormal;
 	float DetectedWallSign;
 
-
+	void Damaged(float DamageAmount);
 
 };
 
