@@ -52,7 +52,6 @@ void AMrPinstripeCharacter::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 
-
 	TArray<UCameraComponent*> CameraComponents;
 	GetComponents<UCameraComponent>(CameraComponents);
 
@@ -106,13 +105,15 @@ void AMrPinstripeCharacter::BeginPlay()
 
 	HP = 100.f;
 
-	HealingDelayTimer = 0.f;
-	HealingTimer = 0.f;
-	ScalarRadiusValue = 2.f;
+	HealingTimerFloat = 0.f;
+
+	ScalarRadiusValue = 10.f;
+	ScalarDensityValue = 2.f;
 
 	MPCInstance = GetWorld()->GetParameterCollectionInstance(MPCObj);
 
 	MPCInstance->SetScalarParameterValue(FName("Radius"), ScalarRadiusValue);
+	MPCInstance->SetScalarParameterValue(FName("Density"), ScalarDensityValue);
 
 }
 
@@ -124,6 +125,7 @@ void AMrPinstripeCharacter::Tick(float DeltaTime)
 	LerpForCrouch(DeltaTime);
 	FindingWallForRunning(DeltaTime);
 	TiltWhileWallRunning(DeltaTime);
+	HealingByTime(DeltaTime);
 }
 
 void AMrPinstripeCharacter::Pause()
@@ -474,37 +476,91 @@ void AMrPinstripeCharacter::TiltWhileWallRunning(float DeltaTime)
 }
 
 // 시간에 따라 체력 회복
+// TODO : 플레이어가 납득할수 있을 만한 회복 피드백이 안나오고 있음
+// 만족할 만한 값을 찾아야함. 일단 모두 주석화
 void AMrPinstripeCharacter::HealingByTime(float DeltaTime)
 {
-	
+	if (HP >= 100)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("체력이 이미 100입니다."));
+		HP = 100;
+		ScalarRadiusValue = 10.f;
+		MPCInstance->SetScalarParameterValue(FName("Radius"), ScalarRadiusValue);
+		ScalarDensityValue = 2.f;
+		MPCInstance->SetScalarParameterValue(FName("Density"), ScalarDensityValue);
+		return;
+	}
+
+
+	if (HP < 100 && HP > 0 && ScalarRadiusValue != 2.f && ScalarDensityValue != 2.f)
+	{
+		HealingTimerFloat += DeltaTime;
+		UE_LOG(LogTemp, Warning, TEXT("회복 검사 중"));
+		if (HealingTimerFloat >= 3.f)
+		{
+			HP = FMath::FInterpTo(HP, 100, DeltaTime, 5.2f);	// 실제 체력
+
+			ScalarRadiusValue = FMath::FInterpConstantTo(ScalarRadiusValue, 2.f, DeltaTime, 0.2f);
+			MPCInstance->SetScalarParameterValue(FName("Radius"), ScalarRadiusValue);
+
+			ScalarDensityValue = FMath::FInterpConstantTo(ScalarDensityValue, 2.f, DeltaTime, 0.2f);
+			MPCInstance->SetScalarParameterValue(FName("Density"), ScalarDensityValue);
+
+			UE_LOG(LogTemp, Warning, TEXT("3초가 지나 회복을 시작. 각 기준값을 출력합니다. 다음과 같습니다."));
+			UE_LOG(LogTemp, Warning, TEXT("체력 : %.2f"), HP);
+			UE_LOG(LogTemp, Warning, TEXT("스칼라 반지름 : %.2f"), ScalarRadiusValue);
+			UE_LOG(LogTemp, Warning, TEXT("스칼라 선명도 : %.2f"), ScalarDensityValue);
+
+
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("아직 회복할 수 없습니다 %.2f"), HealingTimerFloat);
+		}
+	}
 }
 
 // 데미지 처리 함수
 void AMrPinstripeCharacter::Damaged(float DamageAmount)
 {
-	HP -= DamageAmount;
-	
-	if (HP <= 25) {
-		MPCInstance->SetScalarParameterValue(FName("Radius"), 0.8f);
-	}
-	else if (HP <= 45) {
-
-		MPCInstance->SetScalarParameterValue(FName("Radius"), 1.1f);
-	}
-	else if (HP <= 65)
-	{
-		MPCInstance->SetScalarParameterValue(FName("Radius"), 1.3f);
-	}
-
 	if (HP <= 0.f)
 	{
 		Die();
+		return;
 	}
+
+	// 만약 Radius 값이 10이면 2.f로 변경
+	if (ScalarRadiusValue > 2.f)
+	{
+		ScalarRadiusValue = 2.f;
+		MPCInstance->SetScalarParameterValue(FName("Radius"), ScalarRadiusValue);
+	}
+
+	// 입은 데미지 체력에 적용
+	HP -= DamageAmount;
+
+	// 회복 카운트 초기화
+	HealingTimerFloat = 0.f;
+
+	// 입은 데미지만큼의 비네트효과 적용
+	if (ScalarRadiusValue >= 1.f)
+	{
+		ScalarRadiusValue -= (DamageAmount / 100.f);
+		MPCInstance->SetScalarParameterValue(FName("Radius"), ScalarRadiusValue);
+	}
+
+	if (ScalarDensityValue >= 1.f)
+	{
+		ScalarDensityValue -= (DamageAmount / 100.f);
+		MPCInstance->SetScalarParameterValue(FName("Density"), ScalarDensityValue);
+	}
+
 }
 
 // 사망 처리 함수
 void AMrPinstripeCharacter::Die()
 {
 	UE_LOG(LogTemp, Warning, TEXT("플레이어가 사망했습니다."));
-	// 사망 시 처리 로직 추가 (예: 게임 오버 화면 표시, 리스폰 등)
+
+
 }

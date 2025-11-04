@@ -34,7 +34,7 @@ class AMrPinstripeCharacter : public ACharacter
 
 public:
 
-
+	float testfloat = 2.f;
 
 	AMrPinstripeCharacter();
 
@@ -117,10 +117,13 @@ protected:
 	// 이 콜렉션 값을 조절하여 체력이 낮아질 수록 화면을 빨갛게 함
 	UMaterialParameterCollectionInstance* MPCInstance;
 
-	float HealingDelayTimer;
-	float HealingTimer;
+	float HealingTimerFloat;
 
 	float ScalarRadiusValue;
+
+	float ScalarDensityValue;
+
+
 public:
 
 	/** Returns Mesh1P subobject **/

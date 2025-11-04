@@ -94,6 +94,7 @@ protected:
 	void TrackingPlayerByLineTrace();
 
 	void FindingNiagara();
+
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

@@ -269,8 +269,6 @@ float AEnemy::GetCurrentVelocity()
 	return GetVelocity().Size();
 }
 
-
-
 void AEnemy::Damaged(float ReceivedDamage) {
 	EnemyState = EEnemyCombatState::Hit;
 	HP -= ReceivedDamage;
@@ -285,6 +283,10 @@ void AEnemy::Damaged(float ReceivedDamage) {
 void AEnemy::Die() {
 	if (HP <= 0.f && EnemyState != EEnemyCombatState::Die) {
 		EnemyState = EEnemyCombatState::Die;
+
+		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+		GetMesh()->SetSimulatePhysics(true);
+
 		SetLifeSpan(3.f);
 	}
 }

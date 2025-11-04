@@ -14,7 +14,6 @@ class MRPINSTRIPE_API UMrPinstripeWeaponComponent : public USkeletalMeshComponen
 	GENERATED_BODY()
 
 public:
-
 	/** Projectile class to spawn */
 	UPROPERTY(EditDefaultsOnly, Category=Projectile)
 	TSubclassOf<class AMrPinstripeProjectile> ProjectileClass;
@@ -64,7 +63,6 @@ public:
 	UPROPERTY(EditAnywhere)
 	bool IsAiming = false;
 
-	
 
 protected:
 
