@@ -62,6 +62,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float HP;
 
+	bool IsPlayerDead;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UMaterialParameterCollection* MPCObj;
@@ -104,7 +106,7 @@ protected:
 
 	void HealingByTime(float DeltaTime);
 
-	void Die();
+	void Die(float DeltaTime);
 
 protected:
 	/** Mesh for Physical Calculating */

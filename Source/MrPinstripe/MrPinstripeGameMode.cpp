@@ -22,6 +22,21 @@ void AMrPinstripeGameMode::BeginPlay()
 	// 게임 시작 시
 	if (UGameplayStatics::GetCurrentLevelName(GetWorld(), true).Contains("Gamemap"))
 	{
+		// 플레이어 캐릭터 초기화
+		TArray<AActor*> FoundActors;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AMrPinstripeCharacter::StaticClass(), FoundActors);
+
+		for (AActor* Actor : FoundActors)
+		{
+			AMrPinstripeCharacter* MyChar = Cast<AMrPinstripeCharacter>(Actor);
+			if (MyChar && MyChar->GetName().Contains("Viewmodel"))
+			{
+				PlayerCharacter = MyChar;
+				break;
+			}
+		}
+
+
 		MyCustomState = EGameState::GamePlaying;
 
 		//if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
@@ -68,6 +83,9 @@ void AMrPinstripeGameMode::BeginPlay()
 		UE_LOG(LogTemp, Warning, TEXT("현재 타이틀 화면. 상태는 : %d"), MyCustomState);
 		UGameplayStatics::PlaySound2D(this, TitleBGMCue);
 	}
+
+	// 어떤 상태이든지 처음에는 GameOverWidget은 비활성화
+	GameOverWidget->RemoveFromParent();
 }
 
 void AMrPinstripeGameMode::Tick(float DeltaTime)
@@ -88,6 +106,11 @@ void AMrPinstripeGameMode::Tick(float DeltaTime)
 			CrosshairWidget->SetVisibility(ESlateVisibility::Hidden);
 		}
 
+
+		// 플레이어 체력이 다 할시 게임 오버 위젯 활성화
+		if (PlayerCharacter->IsPlayerDead) {
+			GameOverWidget->AddToViewport();
+		}
 	}
 }
 

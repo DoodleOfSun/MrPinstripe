@@ -23,6 +23,7 @@ class AMrPinstripeGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
+	AMrPinstripeCharacter* PlayerCharacter;
 
 	UPROPERTY(EditAnywhere)
 	UUserWidget* TitleWidget;
@@ -39,6 +40,8 @@ class AMrPinstripeGameMode : public AGameModeBase
 	UPROPERTY(EditAnywhere)
 	USoundCue* TitleBGMCue;
 
+	UPROPERTY(EditAnywhere)
+	UUserWidget* GameOverWidget;
 
 	UPROPERTY(EditAnywhere)
 	USoundCue* BGMCueBeta;

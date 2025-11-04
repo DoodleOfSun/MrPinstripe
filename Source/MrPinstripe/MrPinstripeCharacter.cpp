@@ -86,6 +86,7 @@ void AMrPinstripeCharacter::BeginPlay()
 	IsReloading = false;
 	IsEquipWeapon = false;
 	IsWallRunning = false;
+	IsPlayerDead = false;
 
 	WalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 	CrouchSpeed = GetCharacterMovement()->MaxWalkSpeed * 0.5f;
@@ -126,6 +127,7 @@ void AMrPinstripeCharacter::Tick(float DeltaTime)
 	FindingWallForRunning(DeltaTime);
 	TiltWhileWallRunning(DeltaTime);
 	HealingByTime(DeltaTime);
+	Die(DeltaTime);
 }
 
 void AMrPinstripeCharacter::Pause()
@@ -437,6 +439,7 @@ void AMrPinstripeCharacter::WallJumping(FVector WallNormal)
 	}
 }
 
+// 월 러닝 중 플레이어 기울이기
 void AMrPinstripeCharacter::TiltWhileWallRunning(float DeltaTime)
 {
 	if (IsWallRunning)
@@ -525,7 +528,6 @@ void AMrPinstripeCharacter::Damaged(float DamageAmount)
 {
 	if (HP <= 0.f)
 	{
-		Die();
 		return;
 	}
 
@@ -558,9 +560,17 @@ void AMrPinstripeCharacter::Damaged(float DamageAmount)
 }
 
 // 사망 처리 함수
-void AMrPinstripeCharacter::Die()
+void AMrPinstripeCharacter::Die(float DeltaTime)
 {
-	UE_LOG(LogTemp, Warning, TEXT("플레이어가 사망했습니다."));
+	if (HP <= 0.f)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("플레이어가 사망했습니다."));
+		IsPlayerDead = true;
 
+		// 사망 후 카메라 틸트
+		float TargetPitch = 50.f;
+		float InterpedPitch = FMath::FInterpTo(ArmMesh->GetRelativeRotation().Pitch, TargetPitch, DeltaTime, 3.5f);
+		ArmMesh->SetRelativeRotation(FRotator(InterpedPitch, -89.999999f, 0.f));
+	}
 
 }
