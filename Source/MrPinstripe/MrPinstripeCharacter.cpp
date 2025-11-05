@@ -18,6 +18,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Materials/MaterialParameterCollection.h"
 #include "Materials/MaterialParameterCollectionInstance.h"
+#include "GameFramework/PlayerStart.h"
+#include "EngineUtils.h"
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -122,12 +124,23 @@ void AMrPinstripeCharacter::BeginPlay()
 void AMrPinstripeCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (IsPlayerDead) {
+		// 사망 후 ArmMesh 틸트
+		float TargetPitch = 50.f;
+		float InterpedPitch = FMath::FInterpTo(ArmMesh->GetRelativeRotation().Pitch, TargetPitch, DeltaTime, 1.2f);
+		UE_LOG(LogTemp, Warning, TEXT("사망으로 인한 ArmMesh 틸트 %.2f"), InterpedPitch);
+		ArmMesh->SetRelativeRotation(FRotator(InterpedPitch, -89.999999f, 0.f));
+		return;
+	}
+
 	PhysSlide(DeltaTime);
 	LerpForCrouch(DeltaTime);
 	FindingWallForRunning(DeltaTime);
 	TiltWhileWallRunning(DeltaTime);
 	HealingByTime(DeltaTime);
 	Die(DeltaTime);
+
 }
 
 void AMrPinstripeCharacter::Pause()
@@ -485,7 +498,6 @@ void AMrPinstripeCharacter::HealingByTime(float DeltaTime)
 {
 	if (HP >= 100)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("체력이 이미 100입니다."));
 		HP = 100;
 		ScalarRadiusValue = 10.f;
 		MPCInstance->SetScalarParameterValue(FName("Radius"), ScalarRadiusValue);
@@ -498,7 +510,6 @@ void AMrPinstripeCharacter::HealingByTime(float DeltaTime)
 	if (HP < 100 && HP > 0 && ScalarRadiusValue != 2.f && ScalarDensityValue != 2.f)
 	{
 		HealingTimerFloat += DeltaTime;
-		UE_LOG(LogTemp, Warning, TEXT("회복 검사 중"));
 		if (HealingTimerFloat >= 3.f)
 		{
 			HP = FMath::FInterpTo(HP, 100, DeltaTime, 5.2f);	// 실제 체력
@@ -509,16 +520,7 @@ void AMrPinstripeCharacter::HealingByTime(float DeltaTime)
 			ScalarDensityValue = FMath::FInterpConstantTo(ScalarDensityValue, 2.f, DeltaTime, 0.2f);
 			MPCInstance->SetScalarParameterValue(FName("Density"), ScalarDensityValue);
 
-			UE_LOG(LogTemp, Warning, TEXT("3초가 지나 회복을 시작. 각 기준값을 출력합니다. 다음과 같습니다."));
-			UE_LOG(LogTemp, Warning, TEXT("체력 : %.2f"), HP);
-			UE_LOG(LogTemp, Warning, TEXT("스칼라 반지름 : %.2f"), ScalarRadiusValue);
-			UE_LOG(LogTemp, Warning, TEXT("스칼라 선명도 : %.2f"), ScalarDensityValue);
 
-
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("아직 회복할 수 없습니다 %.2f"), HealingTimerFloat);
 		}
 	}
 }
@@ -556,7 +558,6 @@ void AMrPinstripeCharacter::Damaged(float DamageAmount)
 		ScalarDensityValue -= (DamageAmount / 100.f);
 		MPCInstance->SetScalarParameterValue(FName("Density"), ScalarDensityValue);
 	}
-
 }
 
 // 사망 처리 함수
@@ -564,13 +565,6 @@ void AMrPinstripeCharacter::Die(float DeltaTime)
 {
 	if (HP <= 0.f)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("플레이어가 사망했습니다."));
 		IsPlayerDead = true;
-
-		// 사망 후 카메라 틸트
-		float TargetPitch = 50.f;
-		float InterpedPitch = FMath::FInterpTo(ArmMesh->GetRelativeRotation().Pitch, TargetPitch, DeltaTime, 3.5f);
-		ArmMesh->SetRelativeRotation(FRotator(InterpedPitch, -89.999999f, 0.f));
 	}
-
 }

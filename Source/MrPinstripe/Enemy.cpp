@@ -37,6 +37,7 @@ void AEnemy::Init() {
 	IsDetectedPlayer = false;
 	IsReadyToShot = false;
 	IsWallRunningForAnimation = false;
+	IsPlayerBehind = false;
 
 	TArray<AActor*> FoundActors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AMrPinstripeCharacter::StaticClass(), FoundActors);
@@ -94,6 +95,11 @@ void AEnemy::Init() {
 void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (TargetPlayerCharacter->IsPlayerDead) {
+		return;
+	}
+
 	if (EnemyState != EEnemyCombatState::Die && EnemyState != EEnemyCombatState::Hit) {
 		DetectingPlayerByDistance(DeltaTime);
 		CaculatingAimOffsetRotation(DeltaTime);
@@ -156,7 +162,7 @@ void AEnemy::FindingPlayerAndFocus() {
 
 void AEnemy::Firing(float DeltaTime) {
 
-	if (IsReadyToShot && !IsWallRunning && !GetCharacterMovement()->IsFalling() && GetVelocity().Size() == 0) {
+	if (IsReadyToShot && GetVelocity().Size() == 0 && !IsPlayerBehind) {
 
 		FireTime += DeltaTime;
 
@@ -374,7 +380,7 @@ void AEnemy::CaculatingAimOffsetRotation(float DeltaTime) {
 
 		if (Dot > 0)
 		{
-
+			IsPlayerBehind = false;
 			FVector Cross = FVector::CrossProduct(ForwardVector, ToTarget);
 			float Sign = FMath::Sign(Cross.Z);
 
@@ -403,6 +409,7 @@ void AEnemy::CaculatingAimOffsetRotation(float DeltaTime) {
 		// 객체를 천천히 플레이어를 향해 돌린다.
 		else if(!GetCharacterMovement()->IsFalling())
 		{
+			IsPlayerBehind = true;
 			SetActorRelativeRotation(FMath::RInterpTo(GetActorRotation(), LookAtRot, DeltaTime, 1.2f));
 		}
 
@@ -419,11 +426,14 @@ void AEnemy::CaculatingAimOffsetRotation(float DeltaTime) {
 		}
 
 	}
+
+	// 감지되지 않은 경우 오프셋을 기본값으로 복귀
+	// 단 캐릭터 회전 값은 에임오프셋이랑 별개이므로 같이 초기화
 	else {
 		AimOffsetVector.X = FMath::FInterpTo(AimOffsetVector.X, 0.f, DeltaTime, 2.2f);
 		AimOffsetVector.Y = FMath::FInterpTo(AimOffsetVector.Y, 0.5f, DeltaTime, 2.2f);
 		AimOffsetVector.Z = FMath::FInterpTo(AimOffsetVector.Z, 0.f, DeltaTime, 2.2f);
-
+		SetActorRelativeRotation(FMath::RInterpTo(GetActorRotation(), FRotator(0.f,0.f,0.f), DeltaTime, 1.2f));
 	}
 }
 

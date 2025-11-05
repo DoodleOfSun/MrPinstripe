@@ -111,6 +111,9 @@ void AMrPinstripeGameMode::Tick(float DeltaTime)
 		if (PlayerCharacter->IsPlayerDead) {
 			GameOverWidget->AddToViewport();
 		}
+		else if (!PlayerCharacter->IsPlayerDead) {
+			GameOverWidget->RemoveFromParent();
+		}
 	}
 }
 
@@ -204,6 +207,7 @@ void AMrPinstripeGameMode::TitleOptionOpen()
 
 
 // HACK : 이거 리팩토링 필요함. 이름이 잘못됨. 그러니 메인화면일때 / 게임 화면일 때 버튼 역할이 달라지는 함수인거임
+// 된거같은데 왜 주석 안지워놨지 일단 되있음
 void AMrPinstripeGameMode::TitleOptionClose()
 {
 	if (UGameplayStatics::GetCurrentLevelName(GetWorld(), true).Contains("Titlemap")) {

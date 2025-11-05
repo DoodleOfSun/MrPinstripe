@@ -49,6 +49,11 @@ void AEnemyAIController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (ControlledEnemy->TargetPlayerCharacter->IsPlayerDead) {
+		ControlledEnemy->MoveAudioComponent->Stop();
+		return;
+	}
+
 	EnemyMovingLogic(DeltaTime);
 
 	if (!ControlledEnemy->MoveAudioComponent->IsPlaying() && ControlledEnemy->GetVelocity().Size() != 0 && !ControlledEnemy->GetCharacterMovement()->IsFalling()) {

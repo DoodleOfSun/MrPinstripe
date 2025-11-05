@@ -62,6 +62,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float HP;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsPlayerDead;
 
 

@@ -151,4 +151,6 @@ private:
 	float TrackingTraceTime;
 
 	EEnemyCombatState LastCombatState;
+
+	bool IsPlayerBehind;
 };
