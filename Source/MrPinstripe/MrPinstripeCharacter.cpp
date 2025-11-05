@@ -84,6 +84,12 @@ void AMrPinstripeCharacter::BeginPlay()
 	IsReloading = false;
 	IsEquipWeapon = false;
 	IsWallRunning = false;
+<<<<<<< Updated upstream
+=======
+	IsPlayerDead = false;
+	IsArmMeshInterped = false;
+	IsTimeToEndWallRun = false;
+>>>>>>> Stashed changes
 
 	WalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 	CrouchSpeed = GetCharacterMovement()->MaxWalkSpeed * 0.5f;
@@ -345,7 +351,20 @@ void AMrPinstripeCharacter::FindingWallForRunning(float DeltaTime)
 			// 내적을 통해 해당 벽이 플레이어와 수직인지를 비교
 			float Dot = FVector::DotProduct(HitResult.Normal, GetActorForwardVector());
 
-			if (Dot <= 0.5f && Dot >= -0.5f && IsWallRunning)
+			// 월 러닝이 종료된다. 바로 그 자리에 떨어지게 된다.
+			// 떨어지고 나면 IsFalling이 False가 되는데, 이 때 IsTimeToEndWallRun을 False로 한다.
+			// 따라서 다시 점프할 때에는 월 러닝이 가능해진다
+			if (IsTimeToEndWallRun)
+			{
+				DetectedWallSign = 0;
+
+				if (!GetCharacterMovement()->IsFalling())
+				{
+					IsTimeToEndWallRun = false;
+				}
+			}
+
+			else if (Dot <= 0.5f && Dot >= -0.5f && IsWallRunning)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("월러닝, 현재 월러닝 중인 벽의 법선벡터 %s 이고, CurrentWallNoraml에 저장한다."), *HitResult.Normal.ToString());
 				WallRunning(HitResult.ImpactNormal);
@@ -365,6 +384,8 @@ void AMrPinstripeCharacter::FindingWallForRunning(float DeltaTime)
 	}
 }
 
+// 월 러닝 로직, 런 타임에서 호출됨
+// TODO : 월 러닝 중 중력 구현 테스트 필요 좌표랑 증감할 값을 얼마로 해야 하는지 기억이 안남
 void AMrPinstripeCharacter::WallRunning(FVector WallLocation)
 {
 	FVector Forward = GetActorForwardVector(); // 플레이어 전방
@@ -379,8 +400,9 @@ void AMrPinstripeCharacter::WallRunning(FVector WallLocation)
 		DetectedWallSign = 1;
 		FRotator Rotation = FRotator(0.f, -90.f, 0.f);
 		FVector WallRunDir = Rotation.RotateVector(WallNormal);
-		LaunchCharacter(WallRunDir * 850.f, true, true);
 
+		//FVector GravityBoost = FVector(0.f, 0.f, -200.f); 
+		LaunchCharacter(WallRunDir * 850.f, true, true);
 	}
 
 	// 이 벽은 오른쪽에 있다
@@ -389,6 +411,8 @@ void AMrPinstripeCharacter::WallRunning(FVector WallLocation)
 		DetectedWallSign = -1;
 		FRotator Rotation = FRotator(0.f, 90.f, 0.f);
 		FVector WallRunDir = Rotation.RotateVector(WallNormal);
+
+		//FVector GravityBoost = FVector(0.f, 0.f, -200.f); 
 		LaunchCharacter(WallRunDir * 850.f, true, true);
 	}
 }
@@ -471,6 +495,14 @@ void AMrPinstripeCharacter::WallJumping(FVector WallNormal)
 	}
 }
 
+<<<<<<< Updated upstream
+=======
+// 월 러닝 중 플레이어 기울이기
+// TODO : 월 러닝 중 해당 각도에 도달한 후 시간이 지남에 따라 카메라가 원래 각도로 천천히 돌아가도록 함
+// 테스트 해 봐야함
+// IsTimeToEndWallRun은 언제 false가 되는가? -> FindingWallForRunning에서 땅에 닿았을 때 false가 된다.
+// 일단 월 러닝이 종료되는 보간 속도는 0.05f인 상태이다. 더 느리게 만들고 싶으면 해당 파라메터를 조절할 것.
+>>>>>>> Stashed changes
 void AMrPinstripeCharacter::TiltWhileWallRunning(float DeltaTime)
 {
 	if (IsWallRunning)
@@ -479,14 +511,38 @@ void AMrPinstripeCharacter::TiltWhileWallRunning(float DeltaTime)
 		if (DetectedWallSign > 0)
 		{
 			float TargetPitch = 25.f;
-			float InterpedPitch = FMath::FInterpTo(ArmMesh->GetRelativeRotation().Pitch, TargetPitch, DeltaTime, CrouchInterpTime);
-			
+			float OriginPitch = 0.f;
 
-			ArmMesh->SetRelativeRotation(FRotator(InterpedPitch, -89.999999f, 0.f));
+			if (IsArmMeshInterped)
+			{
+				float InterpedPitch = FMath::FInterpTo(ArmMesh->GetRelativeRotation().Pitch, OriginPitch, DeltaTime, 0.05f);
+				Armmesh->SetRelativeRotation(FRotator(InterpedPitch, -89.999999f, 0.f));
+
+				// 월 러닝 중 IsArmMeshInterped가 true가 되었고, 따라서 보간을 시작했으며 원래 각도로 거의 도달했을때 처리
+				// Armmesh가 원래 각도에 도달하면 IsTimeToEndWallRun을 true로 변경시켜서 그 자리에 떨어지게 한다.
+				if (FMath::IsNearlyEqual(InterpedPitch, OriginPitch, KINDA_SMALL_NUMBER))
+				{
+					IsTimeToEndWallRun = true;
+				}
+			}
+
+			// IsArmmeshInterped가 False인 경우 처리
+			// 25에 거의 도달하면 플래그를 true로 전환
+			else if (FMath::IsNearlyEqual(InterpedPitch, TargetPitch, KINDA_SMALL_NUMBER))
+			{
+				IsArmMeshInterped = true;
+			}
+
+			// 아직 아닌 경우 25를 향해 보간
+			else {
+				float InterpedPitch = FMath::FInterpTo(ArmMesh->GetRelativeRotation().Pitch, TargetPitch, DeltaTime, CrouchInterpTime);
+				ArmMesh->SetRelativeRotation(FRotator(InterpedPitch, -89.999999f, 0.f));
+			}
 		}
 
 		else if (DetectedWallSign == 0)
 		{
+			IsArmMeshInterped = false;
 			float TargetPitch = 0.f;
 			float InterpedPitch = FMath::FInterpTo(ArmMesh->GetRelativeRotation().Pitch, TargetPitch, DeltaTime, CrouchInterpTime);
 			ArmMesh->SetRelativeRotation(FRotator(InterpedPitch, -89.999999f, 0.f));
@@ -496,16 +552,139 @@ void AMrPinstripeCharacter::TiltWhileWallRunning(float DeltaTime)
 		else
 		{
 			float TargetPitch = -25.f;
-			float InterpedPitch = FMath::FInterpTo(ArmMesh->GetRelativeRotation().Pitch, TargetPitch, DeltaTime, CrouchInterpTime);
-			ArmMesh->SetRelativeRotation(FRotator(InterpedPitch, -89.999999f, 0.f));
+			float OriginPitch = 0.f;
+
+			if (IsArmMeshInterped)
+			{
+				float InterpedPitch = FMath::FInterpTo(ArmMesh->GetRelativeRotation().Pitch, OriginPitch, DeltaTime, 0.05f);
+				Armmesh->SetRelativeRotation(FRotator(InterpedPitch, -89.999999f, 0.f));
+
+				// 월 러닝 중 IsArmMeshInterped가 true가 되었고, 따라서 보간을 시작했으며 원래 각도로 거의 도달했을때 처리
+				// Armmesh가 원래 각도에 도달하면 IsTimeToEndWallRun을 true로 변경시켜서 그 자리에 떨어지게 한다.
+				if (FMath::IsNearlyEqual(InterpedPitch, OriginPitch, KINDA_SMALL_NUMBER))
+				{
+					IsTimeToEndWallRun = true;
+				}
+			}
+
+			// IsArmmeshInterped가 False인 경우 처리
+			// 25에 거의 도달하면 플래그를 true로 전환
+			else if (FMath::IsNearlyEqual(InterpedPitch, TargetPitch, KINDA_SMALL_NUMBER))
+			{
+				IsArmMeshInterped = true;
+			}
+
+			// 아직 아닌 경우 -25를 향해 보간
+			else {
+				float InterpedPitch = FMath::FInterpTo(ArmMesh->GetRelativeRotation().Pitch, TargetPitch, DeltaTime, CrouchInterpTime);
+				ArmMesh->SetRelativeRotation(FRotator(InterpedPitch, -89.999999f, 0.f));
+			}
 		}
 	}
 
 	else
 	{
+		IsArmMeshInterped = false;
 		float TargetPitch = 0.f;
 		float InterpedPitch = FMath::FInterpTo(ArmMesh->GetRelativeRotation().Pitch, TargetPitch, DeltaTime, CrouchInterpTime);
 		ArmMesh->SetRelativeRotation(FRotator(InterpedPitch, -89.999999f, 0.f));
 	}
 }
 
+<<<<<<< Updated upstream
+=======
+// 시간에 따라 체력 회복
+void AMrPinstripeCharacter::HealingByTime(float DeltaTime)
+{
+	if (HP >= 100)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("체력이 이미 100입니다."));
+		HP = 100;
+		ScalarRadiusValue = 10.f;
+		MPCInstance->SetScalarParameterValue(FName("Radius"), ScalarRadiusValue);
+		ScalarDensityValue = 2.f;
+		MPCInstance->SetScalarParameterValue(FName("Density"), ScalarDensityValue);
+		return;
+	}
+
+	if (HP < 100 && HP > 0 && ScalarRadiusValue != 2.f && ScalarDensityValue != 2.f)
+	{
+		HealingTimerFloat += DeltaTime;
+		UE_LOG(LogTemp, Warning, TEXT("회복 검사 중"));
+		if (HealingTimerFloat >= 3.f)
+		{
+			HP = FMath::FInterpTo(HP, 100, DeltaTime, 5.2f);	// 실제 체력
+
+			ScalarRadiusValue = FMath::FInterpConstantTo(ScalarRadiusValue, 2.f, DeltaTime, 0.2f);
+			MPCInstance->SetScalarParameterValue(FName("Radius"), ScalarRadiusValue);
+
+			ScalarDensityValue = FMath::FInterpConstantTo(ScalarDensityValue, 2.f, DeltaTime, 0.2f);
+			MPCInstance->SetScalarParameterValue(FName("Density"), ScalarDensityValue);
+
+			UE_LOG(LogTemp, Warning, TEXT("3초가 지나 회복을 시작. 각 기준값을 출력합니다. 다음과 같습니다."));
+			UE_LOG(LogTemp, Warning, TEXT("체력 : %.2f"), HP);
+			UE_LOG(LogTemp, Warning, TEXT("스칼라 반지름 : %.2f"), ScalarRadiusValue);
+			UE_LOG(LogTemp, Warning, TEXT("스칼라 선명도 : %.2f"), ScalarDensityValue);
+
+
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("아직 회복할 수 없습니다 %.2f"), HealingTimerFloat);
+		}
+	}
+}
+
+// 데미지 처리 함수
+void AMrPinstripeCharacter::Damaged(float DamageAmount)
+{
+	if (HP <= 0.f)
+	{
+		return;
+	}
+
+	// 필요하다면 체력 따라 조건문으로 다른 큐를 재생해도 됨.
+	UGameplayStatics::PlaySound2D(this, DamagedSoundCue); // 피격 사운드 재생
+
+	// 만약 Radius 값이 10이면 2.f로 변경
+	if (ScalarRadiusValue > 2.f)
+	{
+		ScalarRadiusValue = 2.f;
+		MPCInstance->SetScalarParameterValue(FName("Radius"), ScalarRadiusValue);
+	}
+
+	// 입은 데미지 체력에 적용
+	HP -= DamageAmount;
+
+	// 회복 카운트 초기화
+	HealingTimerFloat = 0.f;
+
+	// 입은 데미지만큼의 비네트효과 적용
+	if (ScalarRadiusValue >= 1.f)
+	{
+		ScalarRadiusValue -= (DamageAmount / 100.f);
+		MPCInstance->SetScalarParameterValue(FName("Radius"), ScalarRadiusValue);
+	}
+
+	if (ScalarDensityValue >= 1.f)
+	{
+		ScalarDensityValue -= (DamageAmount / 100.f);
+		MPCInstance->SetScalarParameterValue(FName("Density"), ScalarDensityValue);
+	}
+}
+
+// 사망 처리 함수
+void AMrPinstripeCharacter::Die(float DeltaTime)
+{
+	if (HP <= 0.f)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("플레이어가 사망했습니다."));
+		IsPlayerDead = true;
+
+		// 사망 후 카메라 틸트
+		float TargetPitch = 50.f;
+		float InterpedPitch = FMath::FInterpTo(ArmMesh->GetRelativeRotation().Pitch, TargetPitch, DeltaTime, 3.5f);
+		ArmMesh->SetRelativeRotation(FRotator(InterpedPitch, -89.999999f, 0.f));
+	}
+}
+>>>>>>> Stashed changes

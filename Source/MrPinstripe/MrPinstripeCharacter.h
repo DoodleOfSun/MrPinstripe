@@ -4,6 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+<<<<<<< Updated upstream
+=======
+#include "Materials/MaterialParameterCollection.h"
+#include "Materials/MaterialParameterCollectionInstance.h"
+#include "Sound/SoundCue.h"
+
+>>>>>>> Stashed changes
 #include "Logging/LogMacros.h"
 #include "MrPinstripeCharacter.generated.h"
 
@@ -59,6 +66,11 @@ public:
 
 	UCameraComponent* GetFPSCamera() const { return FPSCamera; }
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USoundCue* DamagedSoundCue;
+
+
+
 
 protected:
 
@@ -100,6 +112,24 @@ protected:
 	/** Camera for Physical Calculating */
 	UCameraComponent* FPSCamera;
 
+<<<<<<< Updated upstream
+=======
+	// 포스트 프로세스 볼륨 머터리얼에 적용하는 스칼라 파라메터 콜렉션 객체
+	// 이 콜렉션 값을 조절하여 체력이 낮아질 수록 화면을 빨갛게 함
+	UMaterialParameterCollectionInstance* MPCInstance;
+
+	float HealingTimerFloat;
+
+	float ScalarRadiusValue;
+
+	float ScalarDensityValue;
+
+	bool IsArmMeshInterped;
+
+	bool IsTimeToEndWallRun;
+
+
+>>>>>>> Stashed changes
 public:
 
 	/** Returns Mesh1P subobject **/
