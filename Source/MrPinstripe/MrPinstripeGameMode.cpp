@@ -18,7 +18,11 @@ AMrPinstripeGameMode::AMrPinstripeGameMode()
 void AMrPinstripeGameMode::BeginPlay()
 {
 	Super::BeginPlay();
+	InitGameMode();
+}
 
+void AMrPinstripeGameMode::InitGameMode()
+{
 	// 게임 시작 시
 	if (UGameplayStatics::GetCurrentLevelName(GetWorld(), true).Contains("Gamemap"))
 	{
@@ -108,11 +112,11 @@ void AMrPinstripeGameMode::Tick(float DeltaTime)
 
 
 		// 플레이어 체력이 다 할시 게임 오버 위젯 활성화
-		if (PlayerCharacter->IsPlayerDead) {
-			GameOverWidget->AddToViewport();
-		}
-		else if (!PlayerCharacter->IsPlayerDead) {
+		if (!PlayerCharacter->IsPlayerDead) {
 			GameOverWidget->RemoveFromParent();
+		}
+		else if (PlayerCharacter->IsPlayerDead) {
+			GameOverWidget->AddToViewport();
 		}
 	}
 }

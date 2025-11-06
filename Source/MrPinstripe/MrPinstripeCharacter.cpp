@@ -53,6 +53,11 @@ void AMrPinstripeCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+	InitPlayer();
+}
+
+void AMrPinstripeCharacter::InitPlayer() {
+
 
 	TArray<UCameraComponent*> CameraComponents;
 	GetComponents<UCameraComponent>(CameraComponents);
@@ -117,9 +122,7 @@ void AMrPinstripeCharacter::BeginPlay()
 
 	MPCInstance->SetScalarParameterValue(FName("Radius"), ScalarRadiusValue);
 	MPCInstance->SetScalarParameterValue(FName("Density"), ScalarDensityValue);
-
 }
-
 
 void AMrPinstripeCharacter::Tick(float DeltaTime)
 {

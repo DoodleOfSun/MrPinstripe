@@ -51,7 +51,8 @@ public :
 	UPROPERTY(BlueprintReadWrite)
 	EGameState MyCustomState;
 
-
+	UFUNCTION(BlueprintCallable)
+	void InitGameMode();
 
 public:
 
