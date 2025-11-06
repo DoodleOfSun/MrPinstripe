@@ -399,6 +399,8 @@ void AMrPinstripeCharacter::FindingWallForRunning(float DeltaTime)
 	}
 }
 
+// 월 러닝 로직, 런 타임에서 호출됨
+// TODO : 월 러닝 중 중력 구현 테스트 필요 좌표랑 증감할 값을 얼마로 해야 하는지 기억이 안남
 void AMrPinstripeCharacter::WallRunning(FVector WallLocation)
 {
 	FVector Forward = GetActorForwardVector(); // 플레이어 전방
@@ -407,12 +409,14 @@ void AMrPinstripeCharacter::WallRunning(FVector WallLocation)
 	FVector Cross = FVector::CrossProduct(Forward, WallNormal);
 	float DirectionSign = Cross.Z;
 
+
 	// 이 벽은 왼쪽에 있다
 	if (DirectionSign >= 0)
 	{
 		DetectedWallSign = 1;
 		FRotator Rotation = FRotator(0.f, -90.f, 0.f);
 		FVector WallRunDir = Rotation.RotateVector(WallNormal);
+		//FVector GravityBoost = FVector(0.f, 0.f, -200.f);
 		LaunchCharacter(WallRunDir * 850.f, true, true);
 
 	}
@@ -423,6 +427,7 @@ void AMrPinstripeCharacter::WallRunning(FVector WallLocation)
 		DetectedWallSign = -1;
 		FRotator Rotation = FRotator(0.f, 90.f, 0.f);
 		FVector WallRunDir = Rotation.RotateVector(WallNormal);
+		//FVector GravityBoost = FVector(0.f, 0.f, -200.f);
 		LaunchCharacter(WallRunDir * 850.f, true, true);
 	}
 }
@@ -456,6 +461,10 @@ void AMrPinstripeCharacter::WallJumping(FVector WallNormal)
 }
 
 // 월 러닝 중 플레이어 기울이기
+// TODO : 월 러닝 중 해당 각도에 도달한 후 시간이 지남에 따라 카메라가 원래 각도로 천천히 돌아가도록 함
+// 테스트 해 봐야함
+// IsTimeToEndWallRun은 언제 false가 되는가? -> FindingWallForRunning에서 땅에 닿았을 때 false가 된다.
+// 일단 월 러닝이 종료되는 보간 속도는 0.05f인 상태이다. 더 느리게 만들고 싶으면 해당 파라메터를 조절할 것.
 void AMrPinstripeCharacter::TiltWhileWallRunning(float DeltaTime)
 {
 	if (IsWallRunning)
@@ -465,8 +474,6 @@ void AMrPinstripeCharacter::TiltWhileWallRunning(float DeltaTime)
 		{
 			float TargetPitch = 25.f;
 			float InterpedPitch = FMath::FInterpTo(ArmMesh->GetRelativeRotation().Pitch, TargetPitch, DeltaTime, CrouchInterpTime);
-			
-
 			ArmMesh->SetRelativeRotation(FRotator(InterpedPitch, -89.999999f, 0.f));
 		}
 

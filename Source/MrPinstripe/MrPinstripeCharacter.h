@@ -6,7 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Materials/MaterialParameterCollection.h"
 #include "Materials/MaterialParameterCollectionInstance.h"
-
+#include "Sound/SoundCue.h"
 #include "Logging/LogMacros.h"
 #include "MrPinstripeCharacter.generated.h"
 
@@ -65,12 +65,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsPlayerDead;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USoundCue* DamagedSoundCue;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UMaterialParameterCollection* MPCObj;
 
 	UCameraComponent* GetFPSCamera() const { return FPSCamera; }
-
 
 protected:
 
@@ -128,7 +129,6 @@ protected:
 	float ScalarRadiusValue;
 
 	float ScalarDensityValue;
-
 
 public:
 
