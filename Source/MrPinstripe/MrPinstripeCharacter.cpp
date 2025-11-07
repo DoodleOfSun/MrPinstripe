@@ -94,6 +94,7 @@ void AMrPinstripeCharacter::InitPlayer() {
 	IsEquipWeapon = false;
 	IsWallRunning = false;
 	IsPlayerDead = false;
+	IsWallRunningAndCollided = false;
 
 	WalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 	CrouchSpeed = GetCharacterMovement()->MaxWalkSpeed * 0.5f;
@@ -143,6 +144,8 @@ void AMrPinstripeCharacter::Tick(float DeltaTime)
 	TiltWhileWallRunning(DeltaTime);
 	HealingByTime(DeltaTime);
 	Die(DeltaTime);
+
+	UE_LOG(LogTemp, Warning, TEXT("월러닝 콜라이딩 : %d"), IsWallRunningAndCollided);
 
 }
 
@@ -378,7 +381,7 @@ void AMrPinstripeCharacter::FindingWallForRunning(float DeltaTime)
 		{
 			// 내적을 통해 해당 벽이 플레이어와 수직인지를 비교
 			float Dot = FVector::DotProduct(HitResult.Normal, GetActorForwardVector());
-
+			IsWallRunningAndCollided = true;
 			if (Dot <= 0.5f && Dot >= -0.5f && IsWallRunning)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("월러닝, 현재 월러닝 중인 벽의 법선벡터 %s 이고, CurrentWallNoraml에 저장한다."), *HitResult.Normal.ToString());
@@ -395,6 +398,7 @@ void AMrPinstripeCharacter::FindingWallForRunning(float DeltaTime)
 		else
 		{
 			DetectedWallSign = 0;
+			IsWallRunningAndCollided = false;
 		}
 	}
 }

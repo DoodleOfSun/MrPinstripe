@@ -71,6 +71,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UMaterialParameterCollection* MPCObj;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool IsWallRunningAndCollided;
+
 	UCameraComponent* GetFPSCamera() const { return FPSCamera; }
 
 protected:
