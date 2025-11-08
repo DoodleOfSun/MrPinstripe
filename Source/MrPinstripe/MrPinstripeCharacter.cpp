@@ -145,8 +145,6 @@ void AMrPinstripeCharacter::Tick(float DeltaTime)
 	HealingByTime(DeltaTime);
 	Die(DeltaTime);
 
-	UE_LOG(LogTemp, Warning, TEXT("월러닝 콜라이딩 : %d"), IsWallRunningAndCollided);
-
 }
 
 void AMrPinstripeCharacter::Pause()
@@ -542,6 +540,10 @@ void AMrPinstripeCharacter::HealingByTime(float DeltaTime)
 // 데미지 처리 함수
 void AMrPinstripeCharacter::Damaged(float DamageAmount)
 {
+	// 입은 데미지 체력에 적용
+	HP -= DamageAmount;
+
+
 	if (HP <= 0.f)
 	{
 		return;
@@ -554,11 +556,10 @@ void AMrPinstripeCharacter::Damaged(float DamageAmount)
 		MPCInstance->SetScalarParameterValue(FName("Radius"), ScalarRadiusValue);
 	}
 
-	// 입은 데미지 체력에 적용
-	HP -= DamageAmount;
-
 	// 회복 카운트 초기화
 	HealingTimerFloat = 0.f;
+
+	UGameplayStatics::PlaySound2D(GetWorld(), DamagedSoundCue);
 
 	// 입은 데미지만큼의 비네트효과 적용
 	if (ScalarRadiusValue >= 1.f)
@@ -571,6 +572,10 @@ void AMrPinstripeCharacter::Damaged(float DamageAmount)
 	{
 		ScalarDensityValue -= (DamageAmount / 100.f);
 		MPCInstance->SetScalarParameterValue(FName("Density"), ScalarDensityValue);
+	}
+	
+	if (HP <= 25) {
+		UGameplayStatics::PlaySound2D(GetWorld(), HealingSoundCue);
 	}
 }
 

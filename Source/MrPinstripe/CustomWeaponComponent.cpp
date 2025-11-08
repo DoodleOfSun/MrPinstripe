@@ -28,10 +28,14 @@ void UCustomWeaponComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	InitWeapon();
+}
+
+void UCustomWeaponComponent::InitWeapon()
+{
 	Character = GetCharacterByFinding();
 	EquipedWeaponString = "None";
 	FindingNiagara();
-
 }
 
 
@@ -56,6 +60,7 @@ void UCustomWeaponComponent::FireLogic()
 		ShotGunFire();
 	}
 	else {
+		UE_LOG(LogTemp, Warning, TEXT("기본 발사 로직 실행."));
 		NormalFire();
 	}
 
@@ -73,7 +78,11 @@ void UCustomWeaponComponent::NormalFire()
 
 	if (Character == nullptr || Character->GetController() == nullptr || GM->MyCustomState == EGameState::GamePaused)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("현재 발사 불가. 스테이트는 : %d, 1이면 Pause인 상태임."), GM->MyCustomState);
+		UE_LOG(LogTemp, Warning, TEXT("현재 발사 불가. 스테이트는 : %d, 1이면 Pause인 상태임. 아니면 GetController가 nullptr이거나? Character가 nullptr일수도 있다. 추가 출력한다."), GM->MyCustomState);
+
+		UE_LOG(LogTemp, Warning, TEXT("Character 주소 : %p"), Character);
+		UE_LOG(LogTemp, Warning, TEXT("GetController 주소 : %p"), Character != nullptr ? Character->GetController() : nullptr);
+
 		return;
 	}
 
@@ -196,6 +205,28 @@ void UCustomWeaponComponent::CallingEnemyDamageFunc(FHitResult Hit)
 	if (HitEnemy != nullptr) {
 
 		UE_LOG(LogTemp, Warning, TEXT("적에게 데미지를 가함"));
+
+		if (HitEnemy->HP <= 0 ) {
+			UE_LOG(LogTemp, Warning, TEXT("이미 적의 체력이 0이므로 명시적 반환 하였다."));
+			return;
+		}
+
+		// 데미지를 가했을 때의 위젯 및 사운드 재생
+		if (HitEnemy->HP > WeaponDamagePerBullet) {
+
+			//UGameplayStatics::PlaySound2D(GetWorld(), Character->BulletHitSoundCue);
+			Character->AttackHitFeedBackWidget->AddToViewport();
+		}
+		// 데미지를 가해 죽였을 때의 위젯 및 사운드 재생
+		else {
+
+			//UGameplayStatics::PlaySound2D(GetWorld(), Character->BulletKilledEnemySoundCue);
+			UGameplayStatics::PlaySound2D(GetWorld(), Character->BulletHitSoundCue);
+			Character->KilledHitFeedBackWidget->AddToViewport();
+		}
+
+
+
 		HitEnemy->Damaged(WeaponDamagePerBullet);
 	}
 }
@@ -219,8 +250,10 @@ AMrPinstripeCharacter* UCustomWeaponComponent::GetCharacterByFinding()
 	AMrPinstripeCharacter* MyCharacter = Cast<AMrPinstripeCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	if (MyCharacter != nullptr)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Character found successfully."));
 		return MyCharacter;
 	}
+	UE_LOG(LogTemp, Warning, TEXT("Character found failed."));
 	return nullptr;
 }
 

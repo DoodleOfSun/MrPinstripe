@@ -83,6 +83,9 @@ public:
 	/** Ends gameplay for this component. */
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
+	UFUNCTION(BlueprintCallable)
+	void InitWeapon();
+
 	//void ThrowingWeapon();
 
 	void MuzzleFlame();

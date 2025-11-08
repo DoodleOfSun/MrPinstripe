@@ -39,6 +39,12 @@ public:
 	AMrPinstripeCharacter();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UUserWidget* AttackHitFeedBackWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UUserWidget* KilledHitFeedBackWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsDashing;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -64,6 +70,16 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsPlayerDead;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USoundCue* BulletHitSoundCue;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USoundCue* BulletKilledEnemySoundCue;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USoundCue* HealingSoundCue;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USoundCue* DamagedSoundCue;
