@@ -8,7 +8,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "NiagaraSystem.h"
 #include "NiagaraComponent.h"
-#include "Kismet/GameplayStatics.h"
 #include "Components/AudioComponent.h"
 
 
@@ -87,6 +86,8 @@ void AEnemy::Init() {
 
 	MoveAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	MoveAudioComponent->RegisterComponent();
+
+	BulletLineComponent->Deactivate();
 
 	HP = 100.f;
 }
@@ -198,6 +199,12 @@ void AEnemy::Firing(float DeltaTime) {
 
 				GetWorld()->LineTraceSingleByObjectType(Hit, StartTrace, EndTrace, ObjectQueryParams, QueryParams);
 
+				// 총알 나이아가라 시스템
+				FVector FireDirection = (EndTrace - StartTrace).GetSafeNormal();
+				FRotator FireRot = FireDirection.Rotation(); // 방향 → 회전값
+				BulletLineComponent->SetVectorParameter(FName("FireVector"), FVector(50 * 20.f,FireRot.Yaw * 20.f,FireRot.Pitch * 20.f));
+				BulletLineComponent->Activate(true);
+
 				if (Hit.GetActor() != nullptr) {
 					UE_LOG(LogTemp, Warning, TEXT("Hit Actor: 적의 공격 %s"), *Hit.GetActor()->GetName());
 
@@ -242,6 +249,13 @@ void AEnemy::Firing(float DeltaTime) {
 				DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Green, false, 5.0f);
 				GetWorld()->LineTraceSingleByObjectType(Hit, StartTrace, EndTrace, ObjectQueryParams, QueryParams);
 
+
+				// 총알 나이아가라 시스템
+				FVector FireDirection = (EndTrace - StartTrace).GetSafeNormal();
+				FRotator FireRot = FireDirection.Rotation(); // 방향 → 회전값
+				BulletLineComponent->SetVectorParameter(FName("FireVector"), FVector(50 * 20.f, FireRot.Yaw * 20, FireRot.Pitch * 20));
+				BulletLineComponent->Activate(true);
+
 				if (Hit.GetActor() != nullptr) {
 					UE_LOG(LogTemp, Warning, TEXT("Hit Actor, 적의 공격: %s"), *Hit.GetActor()->GetName());
 
@@ -263,9 +277,11 @@ void AEnemy::Firing(float DeltaTime) {
 			UGameplayStatics::PlaySoundAtLocation(this, FireSoundCue, GetActorLocation());
 		}
 
+		// 다시 쏘기까지에는 시간이 걸림.
 		else
 		{
 			MuzzleFlameComponent->Deactivate();
+			//BulletLineComponent->Deactivate();
 		}
 	}
 }
@@ -410,6 +426,11 @@ void AEnemy::CaculatingAimOffsetRotation(float DeltaTime) {
 		else if(!GetCharacterMovement()->IsFalling())
 		{
 			IsPlayerBehind = true;
+			//LookAtRot.Roll = 0;
+
+			if (LookAtRot.Pitch >= 5) {
+				LookAtRot.Pitch = 2.5f;
+			}
 			SetActorRelativeRotation(FMath::RInterpTo(GetActorRotation(), LookAtRot, DeltaTime, 1.2f));
 		}
 
@@ -460,6 +481,21 @@ void AEnemy::FindingNiagara()
 			{
 				MuzzleFlameComponent = MuzzleFlashComp;
 				MuzzleFlameComponent->Deactivate();
+			}
+			break;
+		}
+	}
+
+
+	for (USceneComponent* Child : ChildrenOfCharacterMesh)
+	{
+		if (Child->GetName() == TEXT("BulletNiagara")) // 블루프린트에서 이름 확인 필요
+		{
+			UNiagaraComponent* BulletNiagaraComp = Cast<UNiagaraComponent>(Child);
+			if (BulletNiagaraComp)
+			{
+				BulletLineComponent = BulletNiagaraComp;
+				BulletLineComponent->Deactivate();
 			}
 			break;
 		}

@@ -139,6 +139,10 @@ public:
 
 	bool IsWallRunningForAnimation;
 
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UNiagaraComponent* BulletLineComponent;
+
+
 private:
 	int CurrentAmmo;
 
