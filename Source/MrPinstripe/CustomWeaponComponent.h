@@ -70,6 +70,8 @@ private :
 
 	float WeaponDamagePerBullet = 0;
 
+	UNiagaraComponent* BulletHitComponent;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

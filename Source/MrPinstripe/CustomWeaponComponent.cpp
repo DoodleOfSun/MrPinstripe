@@ -104,6 +104,22 @@ void UCustomWeaponComponent::NormalFire()
 		if (Hit.GetActor() != nullptr) {
 			UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *Hit.GetActor()->GetName());
 
+			// 해당 지점에 피격 효과
+			BulletHitComponent->Activate(true);
+
+			// 랜덤 회전값 생성
+			FRotator RandomRotationYaw = FRotator(
+				0.0F,
+				FMath::FRandRange(0.0f, 180.F), // Yaw
+				0.0F
+			);
+
+			// 회전 적용
+			BulletHitComponent->SetWorldRotation(RandomRotationYaw);
+
+			BulletHitComponent->SetWorldLocation(Hit.ImpactPoint);
+
+
 			CallingEnemyDamageFunc(Hit);
 		}
 		else if (Hit.GetActor() == nullptr) {
@@ -133,6 +149,20 @@ void UCustomWeaponComponent::NormalFire()
 
 		if (Hit.GetActor() != nullptr) {
 			UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *Hit.GetActor()->GetName());
+
+			// 해당 지점에 피격 효과
+			BulletHitComponent->Activate(true);
+
+			// 랜덤 회전값 생성
+			FRotator RandomRotationYaw = FRotator(
+				0.0F,
+				FMath::FRandRange(0.0f, 180.F), // Yaw
+				0.0F
+			);
+
+			// 회전 적용
+			BulletHitComponent->SetWorldRotation(RandomRotationYaw);
+			BulletHitComponent->SetWorldLocation(Hit.ImpactPoint);
 
 			CallingEnemyDamageFunc(Hit);
 		}
@@ -297,4 +327,19 @@ void UCustomWeaponComponent::FindingNiagara()
 			break;
 		}
 	}
+	
+	for (USceneComponent* Child : Children)
+	{
+		if (Child->GetName() == TEXT("BulletHitNiagara")) // 블루프린트에서 이름 확인 필요
+		{
+			UNiagaraComponent* BulletHitComponentComp = Cast<UNiagaraComponent>(Child);
+			if (BulletHitComponentComp)
+			{
+				BulletHitComponent = BulletHitComponentComp;
+				BulletHitComponent->Deactivate();
+			}
+			break;
+		}
+	}
+
 }
