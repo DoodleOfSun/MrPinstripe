@@ -57,10 +57,17 @@ void UCustomWeaponComponent::FireLogic()
 {
 	if (EquipedWeaponString.Equals("Shotgun"))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("샷건 발사 로직 실행."));
 		ShotGunFire();
 	}
-	else {
-		UE_LOG(LogTemp, Warning, TEXT("기본 발사 로직 실행."));
+	else if (EquipedWeaponString.Equals("Rifle"))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("라이플 발사 로직 실행."));
+		RifleFire();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("권총 혹은 SMG 발사 로직 실행."));
 		NormalFire();
 	}
 
@@ -173,6 +180,106 @@ void UCustomWeaponComponent::NormalFire()
 	}
 }
 
+void UCustomWeaponComponent::RifleFire() {
+	AMrPinstripeGameMode* GM = Cast<AMrPinstripeGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+
+	if (Character == nullptr || Character->GetController() == nullptr || GM->MyCustomState == EGameState::GamePaused)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("현재 발사 불가. 스테이트는 : %d, 1이면 Pause인 상태임. 아니면 GetController가 nullptr이거나? Character가 nullptr일수도 있다. 추가 출력한다."), GM->MyCustomState);
+
+		UE_LOG(LogTemp, Warning, TEXT("Character 주소 : %p"), Character);
+		UE_LOG(LogTemp, Warning, TEXT("GetController 주소 : %p"), Character != nullptr ? Character->GetController() : nullptr);
+
+		return;
+	}
+
+	// 히트스캔 로직. 정조준과 지향사격으로 나뉜다.
+	// 정조준의 경우
+	if (IsAiming) {
+
+		FHitResult Hit;
+		UCameraComponent* cam = Character->GetFPSCamera();
+		FVector StartTrace = cam->GetComponentLocation();
+		FVector EndTrace = StartTrace + (cam->GetForwardVector() * 10000);
+		DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Green, false, 5.0f);
+
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(Character); // 자기 자신 무시
+
+		GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_GameTraceChannel1, Params);
+
+		if (Hit.GetActor() != nullptr) {
+			UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *Hit.GetActor()->GetName());
+
+			// 해당 지점에 피격 효과
+			BulletHitComponent->Activate(true);
+
+			// 랜덤 회전값 생성
+			FRotator RandomRotationYaw = FRotator(
+				0.0F,
+				FMath::FRandRange(0.0f, 180.F), // Yaw
+				0.0F
+			);
+
+			// 회전 적용
+			BulletHitComponent->SetWorldRotation(RandomRotationYaw);
+
+			BulletHitComponent->SetWorldLocation(Hit.ImpactPoint);
+
+
+			CallingEnemyDamageFunc(Hit);
+		}
+		else if (Hit.GetActor() == nullptr) {
+
+			UE_LOG(LogTemp, Warning, TEXT("정조준을 하고 쏘았으나 GetActor가 nullptr임."));
+		}
+	}
+
+	// 지향사격의 경우
+	else {
+
+		FHitResult Hit;
+		UCameraComponent* cam = Character->GetFPSCamera();
+		FVector StartTrace = cam->GetComponentLocation();
+
+
+		float SpreadAngle = 1.f; // 퍼짐 각도 (도 단위)
+		FVector RandomSpread = FMath::VRandCone(cam->GetForwardVector(), FMath::DegreesToRadians(SpreadAngle));
+
+		FVector EndTrace = StartTrace + (RandomSpread * 10000);
+		DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Green, false, 5.0f);
+
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(Character); // 자기 자신 무시
+
+		GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_GameTraceChannel1, Params);
+
+		if (Hit.GetActor() != nullptr) {
+			UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *Hit.GetActor()->GetName());
+
+			// 해당 지점에 피격 효과
+			BulletHitComponent->Activate(true);
+
+			// 랜덤 회전값 생성
+			FRotator RandomRotationYaw = FRotator(
+				0.0F,
+				FMath::FRandRange(0.0f, 180.F), // Yaw
+				0.0F
+			);
+
+			// 회전 적용
+			BulletHitComponent->SetWorldRotation(RandomRotationYaw);
+			BulletHitComponent->SetWorldLocation(Hit.ImpactPoint);
+
+			CallingEnemyDamageFunc(Hit);
+		}
+		else if (Hit.GetActor() == nullptr) {
+
+			UE_LOG(LogTemp, Warning, TEXT("지향사격을 하고 쏘았으나 GetActor가 nullptr임."));
+		}
+	}
+}
+
 // 샷건 팰릿 구현
 // 아직 미완성
 void UCustomWeaponComponent::ShotGunFire()
@@ -214,7 +321,7 @@ void UCustomWeaponComponent::ShotGunFire()
 		}
 		else if (Hit.GetActor() == nullptr) {
 
-			UE_LOG(LogTemp, Warning, TEXT("샷건 발사 : 지향사격을 하고 쏘았으나 GetActor가 nullptr임."));
+			UE_LOG(LogTemp, Warning, TEXT("샷건 발사 : 쏘았으나 GetActor가 nullptr임."));
 		}
 		HitResultList.Add(Hit);
 	}

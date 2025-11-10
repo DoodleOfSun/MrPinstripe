@@ -50,6 +50,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void ShotGunFire();
 
+	void RifleFire();
+
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void Aiming();
 
