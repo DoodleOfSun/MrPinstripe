@@ -58,7 +58,6 @@ void AMrPinstripeCharacter::BeginPlay()
 
 void AMrPinstripeCharacter::InitPlayer() {
 
-
 	TArray<UCameraComponent*> CameraComponents;
 	GetComponents<UCameraComponent>(CameraComponents);
 

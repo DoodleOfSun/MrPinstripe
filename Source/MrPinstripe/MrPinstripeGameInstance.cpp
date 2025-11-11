@@ -2,6 +2,7 @@
 
 
 #include "MrPinstripeGameInstance.h"
+#include "Kismet/GameplayStatics.h"
 
 UMrPinstripeGameInstance::UMrPinstripeGameInstance()
 {
@@ -25,4 +26,13 @@ void UMrPinstripeGameInstance::Init()
 	ScreenModeStr = "FULLSCREEN"; // Default screen mode
 
 	isCrossHairVisible = true; // Default crosshair visibility
+}
+
+void UMrPinstripeGameInstance::SaveWeaponSetting()
+{
+
+}
+
+void UMrPinstripeGameInstance::LoadWeaponSetting() {
+
 }
