@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "WeaponStructClass.h"
 #include "GameFramework/SaveGame.h"
 #include "MrPinstripeSaveGame.generated.h"
 
@@ -11,7 +12,6 @@
  */// C++ 교수님 : 
 UCLASS()
 class MRPINSTRIPE_API UMrPinstripeSaveGame : public USaveGame
-
 {
 	GENERATED_BODY()
 
@@ -41,5 +41,9 @@ public:
 	int GatheredAmmo_Rifle = 0;
 	UPROPERTY(BlueprintReadWrite)
 	int GatheredAmmo_Shotgun = 0;
+
+	// 테스트가 필요한 구조체 선언
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FWeaponStruct SavedWeaponData;
 
 };
