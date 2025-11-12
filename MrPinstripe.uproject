@@ -25,6 +25,10 @@
 		{
 			"Name": "FPSAnimationPack",
 			"Enabled": true
+		},
+		{
+			"Name": "ChaosNiagara",
+			"Enabled": false
 		}
 	]
 }
