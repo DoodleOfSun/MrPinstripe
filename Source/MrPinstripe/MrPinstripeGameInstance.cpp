@@ -3,6 +3,9 @@
 
 #include "MrPinstripeGameInstance.h"
 #include "Kismet/GameplayStatics.h"
+#include "WeaponDataStruct.h"
+#include "MrPinstripeSaveGame.h"
+#include "Kismet/GameplayStatics.h"
 
 UMrPinstripeGameInstance::UMrPinstripeGameInstance()
 {
@@ -30,9 +33,30 @@ void UMrPinstripeGameInstance::Init()
 
 void UMrPinstripeGameInstance::SaveWeaponSetting()
 {
+	// SaveGame 오브젝트 생성
+	UMrPinstripeSaveGame* SaveGameInstance = Cast<UMrPinstripeSaveGame>(
+		UGameplayStatics::CreateSaveGameObject(UMySaveGame::StaticClass()));
 
+	if (SaveGameInstance)
+	{
+		SaveGameInstance->SavedWeaponData = PlayerWeaponData;
+
+		// 실제로 디스크에 저장
+		UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("PlayerSaveSlot"), 0);
+	}
 }
 
-void UMrPinstripeGameInstance::LoadWeaponSetting() {
+void UMrPinstripeGameInstance::LoadWeaponSetting()
+{
+	if (UGameplayStatics::DoesSaveGameExist(TEXT("PlayerSaveSlot"), 0))
+	{
+		UMrPinstripeSaveGame* Loaded = Cast<UMrPinstripeSaveGame>(
+			UGameplayStatics::LoadGameFromSlot(TEXT("PlayerSaveSlot"), 0));
 
+		if (Loaded)
+		{
+			// 구조체 전체 복사
+			PlayerWeaponData = Loaded->SavedWeaponData;
+		}
+	}
 }

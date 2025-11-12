@@ -3,29 +3,29 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/SaveGame.h"
-#include "WeaponDataStruct.h"
-#include "MrPinstripeSaveGame.generated.h"
 
 /**
- * // 이윤형 : 구조체 사용하라
- */// C++ 교수님 : 
-UCLASS()
-class MRPINSTRIPE_API UMrPinstripeSaveGame : public USaveGame
-
+ * 
+ */
+class MRPINSTRIPE_API WeaponDataStruct
 {
-	GENERATED_BODY()
 
 public:
+	WeaponDataStruct();
+	~WeaponDataStruct();
+};
 
-	//void SaveData();
+USTRUCT(Atomic, BlueprintType)
+struct FWeaponStruct
+{
+
+	GENERATED_USTRUCT_BODY()
+
+public:
 
 	// 플레이어가 사망해도 인스턴스에서 데이터를 갖고 있어야 하는 정보들
 	// 1. 진짜로 이 무기를 가지고 있는지에 대한 bool 변수
 	// 2. 각 무기들의 비축한 탄환 개수 Integer
-	// TODO : 개별 전역 변수 선언 남발은 확장성과 가독성이 매우 떨어짐. 구조체로 변경하여 리팩토링 할 필요 있음.
-	// 또한 리팩토링 시 반드시 각 구조체 멤버를 각각 초기화해주는 함수를 선언해야 함
-	// 이유는 BP에서 노드 연결이 굉장히 복잡하고 불편하기 때문. - 오징어같은 BP는 최대한 피해야 한다.
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsPlayerHavePistol = false;
@@ -47,11 +47,5 @@ public:
 	int GatheredAmmo_Rifle = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int GatheredAmmo_Shotgun = 0;
-
-
-
-	// 테스트가 필요한 구조체 선언
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FWeaponStruct SavedWeaponData;
 
 };
