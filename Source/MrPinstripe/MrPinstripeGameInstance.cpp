@@ -4,6 +4,7 @@
 #include "MrPinstripeGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "WeaponStructClass.h"
+#include "MrPinstripeSaveGame.h"
 
 UMrPinstripeGameInstance::UMrPinstripeGameInstance()
 {
@@ -29,13 +30,51 @@ void UMrPinstripeGameInstance::Init()
 	isCrossHairVisible = true; // Default crosshair visibility
 }
 
+// 현재 무기 상태를 저장
 void UMrPinstripeGameInstance::SaveWeaponSetting()
 {
+	UMrPinstripeSaveGame* SaveGameInstance = Cast<UMrPinstripeSaveGame>(
+		UGameplayStatics::CreateSaveGameObject(UMrPinstripeSaveGame::StaticClass()));
 
+	if (!SaveGameInstance)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SaveWeaponSetting: SaveGameInstance 생성 실패"));
+		return;
+	}
+
+	SaveGameInstance->SavedWeaponData = PlayerWeaponStruct;
+
+	if (UGameplayStatics::SaveGameToSlot(SaveGameInstance, TEXT("PlayerSaveSlot"), 0))
+	{
+		UE_LOG(LogTemp, Log, TEXT("SaveWeaponSetting: 저장 성공"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SaveWeaponSetting: 저장 실패"));
+	}
 }
 
-void UMrPinstripeGameInstance::LoadWeaponSetting() {
+// 현재 무기 상태를 불러옴
+void UMrPinstripeGameInstance::LoadWeaponSetting()
+{
+	if (!UGameplayStatics::DoesSaveGameExist(TEXT("PlayerSaveSlot"), 0))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("LoadWeaponSetting: 저장 슬롯이 없습니다."));
+		return;
+	}
 
+	UMrPinstripeSaveGame* LoadedGame = Cast<UMrPinstripeSaveGame>(
+		UGameplayStatics::LoadGameFromSlot(TEXT("PlayerSaveSlot"), 0));
+
+	if (!LoadedGame)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("LoadWeaponSetting: Load 실패"));
+		return;
+	}
+
+	PlayerWeaponStruct = LoadedGame->SavedWeaponData;
+
+	UE_LOG(LogTemp, Log, TEXT("LoadWeaponSetting: 데이터 로드 완료"));
 }
 
 
