@@ -45,6 +45,9 @@ public:
 	UUserWidget* KilledHitFeedBackWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UUserWidget* WeaponMagWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsDashing;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -86,7 +89,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UMaterialParameterCollection* MPCObj;
-
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsWallRunningAndCollided;
@@ -134,6 +136,7 @@ protected:
 	void Die(float DeltaTime);
 
 protected:
+
 	/** Mesh for Physical Calculating */
 	USkeletalMeshComponent* ArmMesh;
 

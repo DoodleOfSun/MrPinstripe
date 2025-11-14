@@ -45,4 +45,7 @@ struct FWeaponStruct
 	int GatheredAmmo_Rifle = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int GatheredAmmo_Shotgun = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString WeaponTypeStr = "None";
 };

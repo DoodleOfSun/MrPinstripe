@@ -25,9 +25,9 @@ public:
 	//UPROPERTY(EditDefaultsOnly, Category = Projectile)
 	//TSubclassOf<class AMrPinstripeProjectile> ProjectileClass;
 
-	// 스폰시킬 총구 화염 나이아가라 시스템
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UNiagaraSystem* MuzzleFlameFX;
+	//// 스폰시킬 총구 화염 나이아가라 시스템
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	//UNiagaraSystem* MuzzleFlameFX;
 
 	// 총구 화염 나이아가라 컴포넌트
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -74,11 +74,15 @@ private :
 
 	UNiagaraComponent* BulletHitComponent;
 
+	UNiagaraComponent* BulletTrailComponent;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
 	void CallingEnemyDamageFunc(FHitResult Hit);
+
+	void CloneNiagaraAndFire(FVector Start, FVector End);
 
 public:	
 	// Called every frame

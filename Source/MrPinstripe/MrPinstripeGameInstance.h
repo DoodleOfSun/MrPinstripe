@@ -100,14 +100,22 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetGatheredAmmo_SMG(int data);
 
+	// 모은 소총의 탄환
 	UFUNCTION(BlueprintCallable)
 	int GetGatheredAmmo_Rifle();
 	UFUNCTION(BlueprintCallable)
 	void SetGatheredAmmo_Rifle(int data);
 
+	// 모은 샷건의 탄환
 	UFUNCTION(BlueprintCallable)
 	int GetGatheredAmmo_Shotgun();
 	UFUNCTION(BlueprintCallable)
 	void SetGatheredAmmo_Shotgun(int data);
+
+	// 현재 들고 있는 무기의 이름
+	UFUNCTION(BlueprintCallable)
+	FString GetWeaponTypeStr();
+	UFUNCTION(BlueprintCallable)
+	void SetWeaponTypeStr(FString data);
 
 };

@@ -10,6 +10,7 @@
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Enemy.h"
+#include "MrPinstripeGameInstance.h"
 
 
 // Sets default values for this component's properties
@@ -70,7 +71,6 @@ void UCustomWeaponComponent::FireLogic()
 		UE_LOG(LogTemp, Warning, TEXT("권총 혹은 SMG 발사 로직 실행."));
 		NormalFire();
 	}
-
 	MuzzleFlame();
 }
 
@@ -106,6 +106,7 @@ void UCustomWeaponComponent::NormalFire()
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(Character); // 자기 자신 무시
 
+		CloneNiagaraAndFire(StartTrace, EndTrace);
 		GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_GameTraceChannel1, Params);
 
 		if (Hit.GetActor() != nullptr) {
@@ -152,6 +153,7 @@ void UCustomWeaponComponent::NormalFire()
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(Character); // 자기 자신 무시
 
+		CloneNiagaraAndFire(StartTrace, EndTrace);
 		GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_GameTraceChannel1, Params);
 
 		if (Hit.GetActor() != nullptr) {
@@ -206,6 +208,7 @@ void UCustomWeaponComponent::RifleFire() {
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(Character); // 자기 자신 무시
 
+		CloneNiagaraAndFire(StartTrace, EndTrace);
 		GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_GameTraceChannel1, Params);
 
 		if (Hit.GetActor() != nullptr) {
@@ -252,6 +255,7 @@ void UCustomWeaponComponent::RifleFire() {
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(Character); // 자기 자신 무시
 
+		CloneNiagaraAndFire(StartTrace, EndTrace);
 		GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_GameTraceChannel1, Params);
 
 		if (Hit.GetActor() != nullptr) {
@@ -284,8 +288,8 @@ void UCustomWeaponComponent::RifleFire() {
 // 아직 미완성
 void UCustomWeaponComponent::ShotGunFire()
 {
-	TArray<FHitResult> HitResultList;
-	HitResultList.Reserve(8);
+	/*TArray<FHitResult> HitResultList;
+	HitResultList.Reserve(8);*/
 
 	UCameraComponent* cam = Character->GetFPSCamera();
 	FVector StartTrace = cam->GetComponentLocation();
@@ -313,17 +317,40 @@ void UCustomWeaponComponent::ShotGunFire()
 		FVector EndTrace = StartTrace + (RandomSpread * 10000);
 		DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Green, false, 5.0f);
 
-		FHitResult Hit;
-		GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_Visibility);
+		FHitResult Hit; 
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(Character); // 자기 자신 무시
+
+		CloneNiagaraAndFire(StartTrace, EndTrace);
+		GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_GameTraceChannel1, Params);
 
 		if (Hit.GetActor() != nullptr) {
+
 			UE_LOG(LogTemp, Warning, TEXT("샷건 발사 : Hit Actor: %s"), *Hit.GetActor()->GetName());
+
+			// 해당 지점에 피격 효과
+			BulletHitComponent->Activate(true);
+
+			// 랜덤 회전값 생성
+			FRotator RandomRotationYaw = FRotator(
+				0.0F,
+				FMath::FRandRange(0.0f, 180.F), // Yaw
+				0.0F
+			);
+
+			// 회전 적용
+			BulletHitComponent->SetWorldRotation(RandomRotationYaw);
+			BulletHitComponent->SetWorldLocation(Hit.ImpactPoint);
+
+			CallingEnemyDamageFunc(Hit);
+
+
 		}
 		else if (Hit.GetActor() == nullptr) {
 
 			UE_LOG(LogTemp, Warning, TEXT("샷건 발사 : 쏘았으나 GetActor가 nullptr임."));
 		}
-		HitResultList.Add(Hit);
+		//HitResultList.Add(Hit);
 	}
 }
 
@@ -396,9 +423,32 @@ AMrPinstripeCharacter* UCustomWeaponComponent::GetCharacterByFinding()
 
 void UCustomWeaponComponent::MuzzleFlame()
 {
-	if (MuzzleFlameFX)
+	if (MuzzleFlameComponent)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("나이아가라 발동됨 - 총구 화염"));
+
+		// 이제 무기 종류가 여러개 추가되었으므로, 그 무기에 따라 오프셋을 변경한다.
+		UMrPinstripeGameInstance* GI = Cast<UMrPinstripeGameInstance>(GetWorld()->GetGameInstance());
+
+
+		if (GI->GetWeaponTypeStr().Equals("Pistol")) {
+			MuzzleFlameComponent->SetRelativeLocation(FVector(0.f, 13.f, 0.f));
+		}
+		else if (GI->GetWeaponTypeStr().Equals("SMG")) {
+			MuzzleFlameComponent->SetRelativeLocation(FVector(0.f, 45.f, 0.f));
+		}
+		else if (GI->GetWeaponTypeStr().Equals("Rifle")) {
+			MuzzleFlameComponent->SetRelativeLocation(FVector(0.f, 63.f, -1.5f));
+		}
+		else if (GI->GetWeaponTypeStr().Equals("Shotgun")) {
+			MuzzleFlameComponent->SetRelativeLocation(FVector(0.f, 72.f, 0.f));
+		}
+
 		MuzzleFlameComponent->Activate(true);
+	}
+	else {
+
+		UE_LOG(LogTemp, Warning, TEXT("나이아가라 찾지 못함 - 총구 화염"));
 	}
 }
 
@@ -428,6 +478,7 @@ void UCustomWeaponComponent::FindingNiagara()
 			UNiagaraComponent* MuzzleFlashComp = Cast<UNiagaraComponent>(Child);
 			if (MuzzleFlashComp)
 			{
+				UE_LOG(LogTemp, Warning, TEXT("나이아가라 총구 화염을 찾음"));
 				MuzzleFlameComponent = MuzzleFlashComp;
 				MuzzleFlameComponent->Deactivate();
 			}
@@ -442,11 +493,53 @@ void UCustomWeaponComponent::FindingNiagara()
 			UNiagaraComponent* BulletHitComponentComp = Cast<UNiagaraComponent>(Child);
 			if (BulletHitComponentComp)
 			{
+				UE_LOG(LogTemp, Warning, TEXT("나이아가라 피격 컴포넌트를 찾음"));
 				BulletHitComponent = BulletHitComponentComp;
 				BulletHitComponent->Deactivate();
 			}
 			break;
 		}
 	}
+	
+	for (USceneComponent* Child : Children)
+	{
+		if (Child->GetName() == TEXT("BulletTraceNiagara")) // 블루프린트에서 이름 확인 필요
+		{
+			UNiagaraComponent* BulletTraceComp = Cast<UNiagaraComponent>(Child);
+			if (BulletTraceComp)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("나이아가라 총알 트레일 컴포넌트를 찾음"));
+				BulletTrailComponent = BulletTraceComp;
+				BulletTrailComponent->Deactivate();
+			}
+			break;
+		}
+	}
 
+}
+
+// NOTE : 필요하다면 원하는 나이아가라 시스템을 파라메터로 받아 사용하는 구조도 가능하다.
+void UCustomWeaponComponent::CloneNiagaraAndFire(FVector Start, FVector End) {
+
+	// 총알 궤적 나이아가라 시스템
+	FVector FireDirection = (End - Start).GetSafeNormal();
+	FRotator FireRot = FireDirection.Rotation(); // 방향 → 회전값
+	//BulletTrailComponent->SetVectorParameter(FName("FireVector"), FVector(50 * 20.f, FireRot.Yaw * 20, FireRot.Pitch * 20));
+	//BulletTrailComponent->Activate(true);
+
+	UNiagaraComponent* NewComp = NewObject<UNiagaraComponent>(BulletTrailComponent->GetOwner());
+	NewComp->SetAsset(BulletTrailComponent->GetAsset());
+	USceneComponent* Parent = BulletTrailComponent->GetAttachParent();
+	if (Parent)
+	{
+		NewComp->AttachToComponent(Parent, FAttachmentTransformRules::KeepRelativeTransform);
+	}
+
+	// transform 복사
+	NewComp->SetRelativeTransform(BulletTrailComponent->GetRelativeTransform());
+
+	NewComp->SetVectorParameter(FName("FireVector"), FVector(FireRot.Roll * 20.f, FireRot.Yaw * -20, FireRot.Pitch * 20));
+	// 컴포넌트 등록 + 재생
+	NewComp->RegisterComponent();
+	NewComp->Activate(true);
 }

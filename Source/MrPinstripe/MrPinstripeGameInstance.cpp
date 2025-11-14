@@ -146,3 +146,11 @@ int UMrPinstripeGameInstance::GetGatheredAmmo_Shotgun() {
 void UMrPinstripeGameInstance::SetGatheredAmmo_Shotgun(int data) {
 	PlayerWeaponStruct.GatheredAmmo_Shotgun = data;
 }
+
+// 현재 들고 있는 무기의 이름
+FString UMrPinstripeGameInstance::GetWeaponTypeStr() {
+	return PlayerWeaponStruct.WeaponTypeStr;
+}
+void UMrPinstripeGameInstance::SetWeaponTypeStr(FString data) {
+	PlayerWeaponStruct.WeaponTypeStr = data;
+}
