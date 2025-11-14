@@ -122,6 +122,8 @@ void AMrPinstripeCharacter::InitPlayer() {
 
 	MPCInstance->SetScalarParameterValue(FName("Radius"), ScalarRadiusValue);
 	MPCInstance->SetScalarParameterValue(FName("Density"), ScalarDensityValue);
+
+	WeaponMagWidget->AddToViewport();
 }
 
 void AMrPinstripeCharacter::Tick(float DeltaTime)
@@ -503,8 +505,6 @@ void AMrPinstripeCharacter::TiltWhileWallRunning(float DeltaTime)
 }
 
 // 시간에 따라 체력 회복
-// TODO : 플레이어가 납득할수 있을 만한 회복 피드백이 안나오고 있음
-// 만족할 만한 값을 찾아야함. 일단 모두 주석화
 void AMrPinstripeCharacter::HealingByTime(float DeltaTime)
 {
 	if (HP >= 100)
@@ -584,5 +584,6 @@ void AMrPinstripeCharacter::Die(float DeltaTime)
 	if (HP <= 0.f)
 	{
 		IsPlayerDead = true;
+		WeaponMagWidget->RemoveFromParent();
 	}
 }

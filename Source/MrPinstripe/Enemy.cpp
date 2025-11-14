@@ -201,9 +201,9 @@ void AEnemy::Firing(float DeltaTime) {
 
 				// 총알 나이아가라 시스템
 				FVector FireDirection = (EndTrace - StartTrace).GetSafeNormal();
-				FRotator FireRot = FireDirection.Rotation(); // 방향 → 회전값
-				BulletLineComponent->SetVectorParameter(FName("FireVector"), FVector(50 * 20.f,FireRot.Yaw * 20.f,FireRot.Pitch * 20.f));
+				BulletLineComponent->SetVectorParameter(FName("FireVector"), FireDirection);
 				BulletLineComponent->Activate(true);
+
 
 				if (Hit.GetActor() != nullptr) {
 					UE_LOG(LogTemp, Warning, TEXT("Hit Actor: 적의 공격 %s"), *Hit.GetActor()->GetName());
@@ -252,8 +252,7 @@ void AEnemy::Firing(float DeltaTime) {
 
 				// 총알 나이아가라 시스템
 				FVector FireDirection = (EndTrace - StartTrace).GetSafeNormal();
-				FRotator FireRot = FireDirection.Rotation(); // 방향 → 회전값
-				BulletLineComponent->SetVectorParameter(FName("FireVector"), FVector(50 * 20.f, FireRot.Yaw * 20, FireRot.Pitch * 20));
+				BulletLineComponent->SetVectorParameter(FName("FireVector"), FireDirection);
 				BulletLineComponent->Activate(true);
 
 				if (Hit.GetActor() != nullptr) {

@@ -522,8 +522,9 @@ void UCustomWeaponComponent::FindingNiagara()
 void UCustomWeaponComponent::CloneNiagaraAndFire(FVector Start, FVector End) {
 
 	// 총알 궤적 나이아가라 시스템
-	FVector FireDirection = (End - Start).GetSafeNormal();
-	FRotator FireRot = FireDirection.Rotation(); // 방향 → 회전값
+	
+	//FRotator FireRot = FireDirection.Rotation();
+	//// 방향 → 회전값
 	//BulletTrailComponent->SetVectorParameter(FName("FireVector"), FVector(50 * 20.f, FireRot.Yaw * 20, FireRot.Pitch * 20));
 	//BulletTrailComponent->Activate(true);
 
@@ -538,7 +539,11 @@ void UCustomWeaponComponent::CloneNiagaraAndFire(FVector Start, FVector End) {
 	// transform 복사
 	NewComp->SetRelativeTransform(BulletTrailComponent->GetRelativeTransform());
 
-	NewComp->SetVectorParameter(FName("FireVector"), FVector(FireRot.Roll * 20.f, FireRot.Yaw * -20, FireRot.Pitch * 20));
+	FVector FireDirection = (End - Start).GetSafeNormal();
+
+
+	NewComp->SetVectorParameter(FName("FireVector"), FireDirection);
+
 	// 컴포넌트 등록 + 재생
 	NewComp->RegisterComponent();
 	NewComp->Activate(true);
