@@ -295,6 +295,12 @@ void AEnemy::Damaged(float ReceivedDamage) {
 	HP -= ReceivedDamage;
 }
 
+void AEnemy::DropWeapon()
+{
+	UE_LOG(LogTemp, Warning, TEXT("두번실행?"));
+	GetWorld()->SpawnActor<AActor>(DropWeaponActor, this->GetActorLocation(), this->GetActorRotation());
+}
+
 // 현재 체력을 Tick에서 계속 확인하며 0 이하면 이 캐릭터는 죽는다
 // 죽는다는 것은 다음을 의미하는 것으로 정의한다.
 // 1. 체력이 0 이하가 되었다.
@@ -307,7 +313,7 @@ void AEnemy::Die() {
 
 		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 		GetMesh()->SetSimulatePhysics(true);
-
+		DropWeapon();
 		SetLifeSpan(3.f);
 	}
 }

@@ -95,6 +95,8 @@ protected:
 
 	void FindingNiagara();
 
+	void DropWeapon();
+
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -141,6 +143,8 @@ public:
 
 	UNiagaraComponent* BulletLineComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Weapon")
+	TSubclassOf<AActor> DropWeaponActor;
 
 private:
 	int CurrentAmmo;

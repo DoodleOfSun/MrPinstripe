@@ -101,7 +101,6 @@ void UCustomWeaponComponent::NormalFire()
 		UCameraComponent* cam = Character->GetFPSCamera();
 		FVector StartTrace = cam->GetComponentLocation();
 		FVector EndTrace = StartTrace + (cam->GetForwardVector() * 10000);
-		DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Green, false, 5.0f);
 
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(Character); // 자기 자신 무시
@@ -148,7 +147,6 @@ void UCustomWeaponComponent::NormalFire()
 		FVector RandomSpread = FMath::VRandCone(cam->GetForwardVector(), FMath::DegreesToRadians(SpreadAngle));
 
 		FVector EndTrace = StartTrace + (RandomSpread * 10000);
-		DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Green, false, 5.0f);
 
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(Character); // 자기 자신 무시
@@ -203,7 +201,6 @@ void UCustomWeaponComponent::RifleFire() {
 		UCameraComponent* cam = Character->GetFPSCamera();
 		FVector StartTrace = cam->GetComponentLocation();
 		FVector EndTrace = StartTrace + (cam->GetForwardVector() * 10000);
-		DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Green, false, 5.0f);
 
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(Character); // 자기 자신 무시
@@ -250,7 +247,6 @@ void UCustomWeaponComponent::RifleFire() {
 		FVector RandomSpread = FMath::VRandCone(cam->GetForwardVector(), FMath::DegreesToRadians(SpreadAngle));
 
 		FVector EndTrace = StartTrace + (RandomSpread * 10000);
-		DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Green, false, 5.0f);
 
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(Character); // 자기 자신 무시
@@ -305,9 +301,7 @@ void UCustomWeaponComponent::ShotGunFire()
 
 	// 지향사격의 경우
 	else {
-
 		SpreadAngle = 15.0f;
-
 	}
 
 	for (int i = 0; i < 8; i++)
@@ -315,7 +309,6 @@ void UCustomWeaponComponent::ShotGunFire()
 		FVector RandomSpread = FMath::VRandCone(cam->GetForwardVector(), FMath::DegreesToRadians(SpreadAngle));
 
 		FVector EndTrace = StartTrace + (RandomSpread * 10000);
-		DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Green, false, 5.0f);
 
 		FHitResult Hit; 
 		FCollisionQueryParams Params;
@@ -537,6 +530,28 @@ void UCustomWeaponComponent::CloneNiagaraAndFire(FVector Start, FVector End) {
 	}
 
 	// transform 복사
+
+	// 이제 무기 종류가 여러개 추가되었으므로, 그 무기에 따라 오프셋을 변경한다.
+	UMrPinstripeGameInstance* GI = Cast<UMrPinstripeGameInstance>(GetWorld()->GetGameInstance());
+
+
+	if (GI->GetWeaponTypeStr().Equals("Pistol")) {
+		//MuzzleFlameComponent->SetRelativeLocation(FVector(0.f, 13.f, 0.f));
+		BulletTrailComponent->SetRelativeLocation(FVector(0.f, 13.f, 0.f));
+	}
+	else if (GI->GetWeaponTypeStr().Equals("SMG")) {
+		//MuzzleFlameComponent->SetRelativeLocation(FVector(0.f, 45.f, 0.f));
+		BulletTrailComponent->SetRelativeLocation(FVector(0.f, 45.f, 0.f));
+	}
+	else if (GI->GetWeaponTypeStr().Equals("Rifle")) {
+		//MuzzleFlameComponent->SetRelativeLocation(FVector(0.f, 63.f, -1.5f));
+		BulletTrailComponent->SetRelativeLocation(FVector(0.f, 63.f, -1.5f));
+	}
+	else if (GI->GetWeaponTypeStr().Equals("Shotgun")) {
+		//MuzzleFlameComponent->SetRelativeLocation(FVector(0.f, 72.f, 0.f));
+		BulletTrailComponent->SetRelativeLocation(FVector(0.f, 72.f, 0.f));
+	}
+
 	NewComp->SetRelativeTransform(BulletTrailComponent->GetRelativeTransform());
 
 	FVector FireDirection = (End - Start).GetSafeNormal();
