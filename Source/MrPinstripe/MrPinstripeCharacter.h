@@ -19,6 +19,16 @@ struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
+
+UENUM(BlueprintType)
+enum class EMrPinstripeCharacterSystemState : uint8
+{
+	Default,
+	FiringWeapon,
+	ChangingWeapon
+};
+
+
 UCLASS(config=Game)
 class AMrPinstripeCharacter : public ACharacter
 {
@@ -94,6 +104,9 @@ public:
 	bool IsWallRunningAndCollided;
 
 	UCameraComponent* GetFPSCamera() const { return FPSCamera; }
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EMrPinstripeCharacterSystemState State;
 
 protected:
 

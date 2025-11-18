@@ -96,8 +96,7 @@ void AEnemy::Init() {
 void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	if (TargetPlayerCharacter->IsPlayerDead) {
+	if (TargetPlayerCharacter->IsPlayerDead || EnemyState == EEnemyCombatState::Die || EnemyState == EEnemyCombatState::Hit) {
 		return;
 	}
 
@@ -107,8 +106,6 @@ void AEnemy::Tick(float DeltaTime)
 		AnimationControl();
 		Firing(DeltaTime);
 	}
-
-	Die();
 }
 
 void AEnemy::AnimationControl()
@@ -166,6 +163,7 @@ void AEnemy::Firing(float DeltaTime) {
 	if (IsReadyToShot && GetVelocity().Size() == 0 && !IsPlayerBehind) {
 
 		FireTime += DeltaTime;
+
 
 		if (FireTime >= FireRateTiming) {
 
@@ -293,11 +291,11 @@ float AEnemy::GetCurrentVelocity()
 void AEnemy::Damaged(float ReceivedDamage) {
 	EnemyState = EEnemyCombatState::Hit;
 	HP -= ReceivedDamage;
+	Die();
 }
 
 void AEnemy::DropWeapon()
 {
-	UE_LOG(LogTemp, Warning, TEXT("두번실행?"));
 	GetWorld()->SpawnActor<AActor>(DropWeaponActor, this->GetActorLocation(), this->GetActorRotation());
 }
 
@@ -307,15 +305,60 @@ void AEnemy::DropWeapon()
 // 2. 체력이 0이 되면 State를 Die로 변경한다.
 // 3. ABP에서 해당 애니메이션을 재생한다.
 // 4. 캐릭터를 10초 후 월드에서 삭제한다.
-void AEnemy::Die() {
-	if (HP <= 0.f && EnemyState != EEnemyCombatState::Die) {
+//void AEnemy::Die()
+//{
+//	if (EnemyState == EEnemyCombatState::Die) return;
+//
+//	if (HP <= 0.f) {
+//		EnemyState = EEnemyCombatState::Die;
+//
+//		KnockOut("Shotgun");
+//		SetActorTickEnabled(false);
+//		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+//		GetMesh()->SetSimulatePhysics(true);
+//		UE_LOG(LogTemp, Warning, TEXT("죽음은 한 번만 실행됨 체력 %.2f"), HP);
+//		DropWeapon();
+//		SetLifeSpan(3.f);
+//	}
+//}
+
+void AEnemy::Die()
+{
+	if (EnemyState == EEnemyCombatState::Die) return;
+
+	if (HP <= 0.f)
+	{
 		EnemyState = EEnemyCombatState::Die;
 
-		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
-		GetMesh()->SetSimulatePhysics(true);
-		DropWeapon();
+		// Tick은 꺼도 됨(LaunchCharacter는 CharacterMovement에서 처리)
+		SetActorTickEnabled(false);
+
+		// 2) 래그돌 전환은 약간 늦게 실행 (0.05초~0.1초 권장)
+		FTimerHandle RagdollTimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(
+			RagdollTimerHandle,
+			this,
+			&AEnemy::EnableRagdollAfterLaunch,   // 아래에 만들 함수
+			0.05f,                               // 딜레이
+			false
+		);
+
+		// 3) 죽음 로그
+		UE_LOG(LogTemp, Warning, TEXT("죽음은 한 번만 실행됨 체력 %.2f"), HP);
+
+		// 4) 이후 정리: 무기 드랍은 래그돌 전환 후 실행하는 것이 자연스러움
 		SetLifeSpan(3.f);
 	}
+}
+
+void AEnemy::EnableRagdollAfterLaunch()
+{
+	// 래그돌 전환
+	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	GetMesh()->SetSimulatePhysics(true);
+
+	// 여기서 무기 드랍
+	DropWeapon();
 }
 
 void AEnemy::FindingCoverObject(float DeltaTime) {
@@ -380,6 +423,33 @@ void AEnemy::TrackingPlayerByLineTrace()
 			IsReadyToShot = false;
 		}
 	}
+}
+
+// 실행되면 뒤로 적을 날려보냄
+// 파라메터로 받은 스트링 데이터로 넉백의 강도를 결정
+void AEnemy::KnockOut(FString StrData) {
+
+	if (StrData.Contains("Shotgun"))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("넉백 발동"));
+
+		FVector Dir = (GetActorLocation() - TargetPlayerCharacter->GetActorLocation()).GetSafeNormal();
+
+		Dir.Z += 0.2f;
+		Dir.Normalize();
+
+		// 4) 힘 조절
+		float KnockbackStrength = 1000.0f;
+		FVector LaunchVelocity = Dir * KnockbackStrength;
+
+		// 5) Launch 적용
+		LaunchCharacter(LaunchVelocity, true, true);
+	}
+	else {
+
+		UE_LOG(LogTemp, Warning, TEXT("넉백 발동 안됨, 스트링 : %s"), *StrData);
+	}
+
 }
 
 void AEnemy::CaculatingAimOffsetRotation(float DeltaTime) {

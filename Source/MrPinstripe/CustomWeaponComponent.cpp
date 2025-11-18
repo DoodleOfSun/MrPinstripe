@@ -108,7 +108,8 @@ void UCustomWeaponComponent::NormalFire()
 		CloneNiagaraAndFire(StartTrace, EndTrace);
 		GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_GameTraceChannel1, Params);
 
-		if (Hit.GetActor() != nullptr) {
+		if (Hit.GetActor() != nullptr)
+		{
 			UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *Hit.GetActor()->GetName());
 
 			// 해당 지점에 피격 효과
@@ -154,7 +155,8 @@ void UCustomWeaponComponent::NormalFire()
 		CloneNiagaraAndFire(StartTrace, EndTrace);
 		GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_GameTraceChannel1, Params);
 
-		if (Hit.GetActor() != nullptr) {
+		if (Hit.GetActor() != nullptr)
+		{
 			UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *Hit.GetActor()->GetName());
 
 			// 해당 지점에 피격 효과
@@ -208,7 +210,8 @@ void UCustomWeaponComponent::RifleFire() {
 		CloneNiagaraAndFire(StartTrace, EndTrace);
 		GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_GameTraceChannel1, Params);
 
-		if (Hit.GetActor() != nullptr) {
+		if (Hit.GetActor() != nullptr)
+		{
 			UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *Hit.GetActor()->GetName());
 
 			// 해당 지점에 피격 효과
@@ -254,7 +257,8 @@ void UCustomWeaponComponent::RifleFire() {
 		CloneNiagaraAndFire(StartTrace, EndTrace);
 		GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_GameTraceChannel1, Params);
 
-		if (Hit.GetActor() != nullptr) {
+		if (Hit.GetActor() != nullptr)
+		{
 			UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *Hit.GetActor()->GetName());
 
 			// 해당 지점에 피격 효과
@@ -317,7 +321,8 @@ void UCustomWeaponComponent::ShotGunFire()
 		CloneNiagaraAndFire(StartTrace, EndTrace);
 		GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_GameTraceChannel1, Params);
 
-		if (Hit.GetActor() != nullptr) {
+		if (Hit.GetActor() != nullptr)
+		{
 
 			UE_LOG(LogTemp, Warning, TEXT("샷건 발사 : Hit Actor: %s"), *Hit.GetActor()->GetName());
 
@@ -361,7 +366,9 @@ void UCustomWeaponComponent::CallingEnemyDamageFunc(FHitResult Hit)
 
 	if (HitEnemy != nullptr) {
 
-		UE_LOG(LogTemp, Warning, TEXT("적에게 데미지를 가함"));
+		UE_LOG(LogTemp, Warning, TEXT("적에게 데미지를 가함, 적의 메시와 액터는 다음과같음"));
+		UE_LOG(LogTemp, Warning, TEXT("적에게 데미지를 가함 : Hit Actor: %s"), *GetNameSafe(Hit.GetActor()));
+		UE_LOG(LogTemp, Warning, TEXT("적에게 데미지를 가함 : Hit Component: %s"), *GetNameSafe(Hit.GetComponent()));
 
 		if (HitEnemy->HP <= 0 ) {
 			UE_LOG(LogTemp, Warning, TEXT("이미 적의 체력이 0이므로 명시적 반환 하였다."));
@@ -374,12 +381,15 @@ void UCustomWeaponComponent::CallingEnemyDamageFunc(FHitResult Hit)
 			//UGameplayStatics::PlaySound2D(GetWorld(), Character->BulletHitSoundCue);
 			Character->AttackHitFeedBackWidget->AddToViewport();
 		}
+
 		// 데미지를 가해 죽였을 때의 위젯 및 사운드 재생
+		// 또한 적을 처치했을 때 넉백 함수 실행
 		else {
 
 			//UGameplayStatics::PlaySound2D(GetWorld(), Character->BulletKilledEnemySoundCue);
 			UGameplayStatics::PlaySound2D(GetWorld(), Character->BulletHitSoundCue);
 			Character->KilledHitFeedBackWidget->AddToViewport();
+			HitEnemy->KnockOut(EquipedWeaponString);
 		}
 
 

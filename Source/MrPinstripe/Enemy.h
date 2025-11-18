@@ -97,6 +97,8 @@ protected:
 
 	void DropWeapon();
 
+	void EnableRagdollAfterLaunch();
+
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -145,6 +147,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Weapon")
 	TSubclassOf<AActor> DropWeaponActor;
+
+	void KnockOut(FString StrData);
 
 private:
 	int CurrentAmmo;
