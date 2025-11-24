@@ -448,17 +448,39 @@ void AMrPinstripeCharacter::WallJumping(FVector WallNormal)
 		if (DirectionSign >= 0)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("%.2f 왼쪽"), WallNormal.Y);
-			FRotator Rotation = FRotator(0.f, -45.f, -50.f * WallNormal.Y);
-			FVector WallJumpingDir = Rotation.RotateVector(WallNormal);
-			LaunchCharacter(WallJumpingDir * 1050.f, true, true);
+			if (FMath::IsNearlyZero(WallNormal.Y, KINDA_SMALL_NUMBER))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Y가 0이여서 X를 넣는 로직 발동"));
+				FRotator Rotation = FRotator(45.f, -45.f, -50.f * WallNormal.X);
+				FVector WallJumpingDir = Rotation.RotateVector(WallNormal);
+				LaunchCharacter(WallJumpingDir * 1050.f, true, true);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Y가 0이여서 X를 넣는 로직 발동 안됨"));
+				FRotator Rotation = FRotator(0.f, -45.f, -50.f * WallNormal.Y);
+				FVector WallJumpingDir = Rotation.RotateVector(WallNormal);
+				LaunchCharacter(WallJumpingDir * 1050.f, true, true);
+			}
 		}
 		// 이 벽은 오른쪽에 있다
 		else
 		{
 			UE_LOG(LogTemp, Warning, TEXT("%.2f 오른쪽"), WallNormal.Y);
-			FRotator Rotation = FRotator(0.f, 45.f, -50.f * WallNormal.Y);
-			FVector WallJumpingDir = Rotation.RotateVector(WallNormal);
-			LaunchCharacter(WallJumpingDir * 1050.f, true, true);
+			if (FMath::IsNearlyZero(WallNormal.Y, KINDA_SMALL_NUMBER))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Y가 0이여서 X를 넣는 로직 발동"));
+				FRotator Rotation = FRotator(45.f, 45.f, -50.f * WallNormal.X);
+				FVector WallJumpingDir = Rotation.RotateVector(WallNormal);
+				LaunchCharacter(WallJumpingDir * 1050.f, true, true);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Y가 0이여서 X를 넣는 로직 발동 안됨"));
+				FRotator Rotation = FRotator(0.f, 45.f, -50.f * WallNormal.Y);
+				FVector WallJumpingDir = Rotation.RotateVector(WallNormal);
+				LaunchCharacter(WallJumpingDir * 1050.f, true, true);
+			}
 		}
 	}
 }
