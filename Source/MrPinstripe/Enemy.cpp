@@ -373,7 +373,8 @@ void AEnemy::FindingWallForWallRunning(float DeltaTime) {
 // 전환되는 플래그는 에임오프셋 계산여부를 결정
 void AEnemy::DetectingPlayerByDistance(float DeltaTime) {
 
-	if (FVector::Dist(TargetPlayerCharacter->GetActorLocation(), GetActorLocation()) <= 1500.f) {
+	if (FVector::Dist(TargetPlayerCharacter->GetActorLocation(), GetActorLocation()) <= 3000.f) {
+		UE_LOG(LogTemp, Warning, TEXT("플레이어 감지됨"));	
 		IsDetectedPlayer = true;
 
 		// 플레이어가 거리 내에 들어오면 지금 위치에서 총을 발사했을 때 적중이 가능한지 라인트레이스로 판단을 한다.

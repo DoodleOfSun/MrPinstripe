@@ -453,13 +453,15 @@ void AMrPinstripeCharacter::WallJumping(FVector WallNormal)
 				UE_LOG(LogTemp, Warning, TEXT("Y가 0이여서 X를 넣는 로직 발동"));
 				FRotator Rotation = FRotator(45.f, -45.f, -50.f * WallNormal.X);
 				FVector WallJumpingDir = Rotation.RotateVector(WallNormal);
+				WallJumpingDir.Z = 0.65;
 				LaunchCharacter(WallJumpingDir * 1050.f, true, true);
 			}
 			else
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Y가 0이여서 X를 넣는 로직 발동 안됨"));
+				UE_LOG(LogTemp, Warning, TEXT("Y가 0이여서 X를 넣는 로직 발동 안됨 %.2f"), WallNormal.Y);
 				FRotator Rotation = FRotator(0.f, -45.f, -50.f * WallNormal.Y);
 				FVector WallJumpingDir = Rotation.RotateVector(WallNormal);
+				WallJumpingDir.Z = 0.65;
 				LaunchCharacter(WallJumpingDir * 1050.f, true, true);
 			}
 		}
@@ -472,13 +474,16 @@ void AMrPinstripeCharacter::WallJumping(FVector WallNormal)
 				UE_LOG(LogTemp, Warning, TEXT("Y가 0이여서 X를 넣는 로직 발동"));
 				FRotator Rotation = FRotator(45.f, 45.f, -50.f * WallNormal.X);
 				FVector WallJumpingDir = Rotation.RotateVector(WallNormal);
+				WallJumpingDir.Z = 0.65;
 				LaunchCharacter(WallJumpingDir * 1050.f, true, true);
 			}
 			else
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Y가 0이여서 X를 넣는 로직 발동 안됨"));
+				UE_LOG(LogTemp, Warning, TEXT("Y가 0이여서 X를 넣는 로직 발동 안됨 %.2f"), WallNormal.Y);
 				FRotator Rotation = FRotator(0.f, 45.f, -50.f * WallNormal.Y);
 				FVector WallJumpingDir = Rotation.RotateVector(WallNormal);
+				WallJumpingDir.Z = 0.65;
 				LaunchCharacter(WallJumpingDir * 1050.f, true, true);
 			}
 		}
