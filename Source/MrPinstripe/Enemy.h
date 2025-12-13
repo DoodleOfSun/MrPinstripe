@@ -164,4 +164,6 @@ private:
 	EEnemyCombatState LastCombatState;
 
 	bool IsPlayerBehind;
+
+	void GiveViewersForPlayer();
 };

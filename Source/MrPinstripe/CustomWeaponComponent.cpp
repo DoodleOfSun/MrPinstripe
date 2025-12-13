@@ -100,7 +100,7 @@ void UCustomWeaponComponent::NormalFire()
 		FHitResult Hit;
 		UCameraComponent* cam = Character->GetFPSCamera();
 		FVector StartTrace = cam->GetComponentLocation();
-		FVector EndTrace = StartTrace + (cam->GetForwardVector() * 10000);
+		FVector EndTrace = StartTrace + (cam->GetForwardVector() * 1000000);
 
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(Character); // 자기 자신 무시
@@ -147,7 +147,7 @@ void UCustomWeaponComponent::NormalFire()
 		float SpreadAngle = 5.0f; // 퍼짐 각도 (도 단위)
 		FVector RandomSpread = FMath::VRandCone(cam->GetForwardVector(), FMath::DegreesToRadians(SpreadAngle));
 
-		FVector EndTrace = StartTrace + (RandomSpread * 10000);
+		FVector EndTrace = StartTrace + (RandomSpread * 1000000);
 
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(Character); // 자기 자신 무시
@@ -202,7 +202,7 @@ void UCustomWeaponComponent::RifleFire() {
 		FHitResult Hit;
 		UCameraComponent* cam = Character->GetFPSCamera();
 		FVector StartTrace = cam->GetComponentLocation();
-		FVector EndTrace = StartTrace + (cam->GetForwardVector() * 10000);
+		FVector EndTrace = StartTrace + (cam->GetForwardVector() * 1000000);
 
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(Character); // 자기 자신 무시
@@ -249,7 +249,7 @@ void UCustomWeaponComponent::RifleFire() {
 		float SpreadAngle = 1.f; // 퍼짐 각도 (도 단위)
 		FVector RandomSpread = FMath::VRandCone(cam->GetForwardVector(), FMath::DegreesToRadians(SpreadAngle));
 
-		FVector EndTrace = StartTrace + (RandomSpread * 10000);
+		FVector EndTrace = StartTrace + (RandomSpread * 1000000);
 
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(Character); // 자기 자신 무시
@@ -312,7 +312,7 @@ void UCustomWeaponComponent::ShotGunFire()
 	{
 		FVector RandomSpread = FMath::VRandCone(cam->GetForwardVector(), FMath::DegreesToRadians(SpreadAngle));
 
-		FVector EndTrace = StartTrace + (RandomSpread * 10000);
+		FVector EndTrace = StartTrace + (RandomSpread * 1000000);
 
 		FHitResult Hit; 
 		FCollisionQueryParams Params;

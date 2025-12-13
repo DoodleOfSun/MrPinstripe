@@ -154,3 +154,63 @@ FString UMrPinstripeGameInstance::GetWeaponTypeStr() {
 void UMrPinstripeGameInstance::SetWeaponTypeStr(FString data) {
 	PlayerWeaponStruct.WeaponTypeStr = data;
 }
+
+// 시청자 수
+// 방송 시작 / 종료
+void UMrPinstripeGameInstance::SetStreaming(bool data) {
+	PlayerViewersStruct.IsLiveStreaming = data;
+
+	if (PlayerViewersStruct.IsLiveStreaming) {
+		GetWorld()->GetTimerManager().SetTimer(
+			PlayerViewersStruct.ViewerDecreaseTimerHandle,
+			this,
+			&UMrPinstripeGameInstance::DecreaseViewersNumbersByTime,
+			0.75f,
+			true
+		);
+	}
+
+	else if (!PlayerViewersStruct.IsLiveStreaming) {
+		GetWorld()->GetTimerManager().ClearTimer(PlayerViewersStruct.ViewerDecreaseTimerHandle);
+	}
+}
+
+// 시청자 수는 시간에 따라 점점 줄어듬
+UFUNCTION(BlueprintCallable)
+void UMrPinstripeGameInstance::DecreaseViewersNumbersByTime()
+{
+	if (PlayerViewersStruct.IsLiveStreaming) {
+		if (PlayerViewersStruct.CurrentViewersCount > 0) {
+			PlayerViewersStruct.CurrentViewersCount -= 1;
+			UE_LOG(LogTemp,Warning, TEXT("시청자 수 감소중 %d"), PlayerViewersStruct.CurrentViewersCount);
+		}
+	}
+}
+
+// 특정한 값을 더해 시청자 수를 늘림
+UFUNCTION(BlueprintCallable)
+void UMrPinstripeGameInstance::IncreaseViewersNumbers(int data) {
+	PlayerViewersStruct.CurrentViewersCount += data;
+}
+
+// 특정한 값을 빼 시청자 수를 줄임
+UFUNCTION(BlueprintCallable)
+void UMrPinstripeGameInstance::DecreaseViewersNumbers(int data) {
+	PlayerViewersStruct.CurrentViewersCount -= data;
+}
+
+// 특정한 값을 입력해 시청자 수를 설정
+UFUNCTION(BlueprintCallable)
+void UMrPinstripeGameInstance::SetViewersNumbers(int data) {
+	PlayerViewersStruct.CurrentViewersCount = data;
+}
+
+// getter
+UFUNCTION(BlueprintCallable)
+int UMrPinstripeGameInstance::GetViewersNumbers() {
+	return PlayerViewersStruct.CurrentViewersCount;
+}
+UFUNCTION(BlueprintCallable)
+bool UMrPinstripeGameInstance::GetIsLiveStreaming() {
+	return PlayerViewersStruct.IsLiveStreaming;
+}

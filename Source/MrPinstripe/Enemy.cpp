@@ -9,6 +9,7 @@
 #include "NiagaraSystem.h"
 #include "NiagaraComponent.h"
 #include "Components/AudioComponent.h"
+#include "MrPinstripeGameInstance.h"	
 
 
 // Sets default values
@@ -299,29 +300,6 @@ void AEnemy::DropWeapon()
 	GetWorld()->SpawnActor<AActor>(DropWeaponActor, this->GetActorLocation(), this->GetActorRotation());
 }
 
-// 현재 체력을 Tick에서 계속 확인하며 0 이하면 이 캐릭터는 죽는다
-// 죽는다는 것은 다음을 의미하는 것으로 정의한다.
-// 1. 체력이 0 이하가 되었다.
-// 2. 체력이 0이 되면 State를 Die로 변경한다.
-// 3. ABP에서 해당 애니메이션을 재생한다.
-// 4. 캐릭터를 10초 후 월드에서 삭제한다.
-//void AEnemy::Die()
-//{
-//	if (EnemyState == EEnemyCombatState::Die) return;
-//
-//	if (HP <= 0.f) {
-//		EnemyState = EEnemyCombatState::Die;
-//
-//		KnockOut("Shotgun");
-//		SetActorTickEnabled(false);
-//		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
-//		GetMesh()->SetSimulatePhysics(true);
-//		UE_LOG(LogTemp, Warning, TEXT("죽음은 한 번만 실행됨 체력 %.2f"), HP);
-//		DropWeapon();
-//		SetLifeSpan(3.f);
-//	}
-//}
-
 void AEnemy::Die()
 {
 	if (EnemyState == EEnemyCombatState::Die) return;
@@ -329,9 +307,15 @@ void AEnemy::Die()
 	if (HP <= 0.f)
 	{
 		EnemyState = EEnemyCombatState::Die;
-
+		
 		// Tick은 꺼도 됨(LaunchCharacter는 CharacterMovement에서 처리)
 		SetActorTickEnabled(false);
+
+		UMrPinstripeGameInstance* GI = Cast<UMrPinstripeGameInstance>(GetWorld()->GetGameInstance());
+
+		// 1) 타입에 따라 시청자 수를 늘림
+		GiveViewersForPlayer();
+
 
 		// 2) 래그돌 전환은 약간 늦게 실행 (0.05초~0.1초 권장)
 		FTimerHandle RagdollTimerHandle;
@@ -374,7 +358,6 @@ void AEnemy::FindingWallForWallRunning(float DeltaTime) {
 void AEnemy::DetectingPlayerByDistance(float DeltaTime) {
 
 	if (FVector::Dist(TargetPlayerCharacter->GetActorLocation(), GetActorLocation()) <= 3000.f) {
-		UE_LOG(LogTemp, Warning, TEXT("플레이어 감지됨"));	
 		IsDetectedPlayer = true;
 
 		// 플레이어가 거리 내에 들어오면 지금 위치에서 총을 발사했을 때 적중이 가능한지 라인트레이스로 판단을 한다.
@@ -576,4 +559,25 @@ void AEnemy::FindingNiagara()
 			break;
 		}
 	}
+}
+
+// 플레이어에게 시청자 수를 증가시켜주는 함수
+// 지금은 간소화되어 있으나 강화된 적을 쓰러뜨리거나 특정 상태에서 적이 쓰러지면 추가 보상을 얻음
+void AEnemy::GiveViewersForPlayer() {
+
+	UMrPinstripeGameInstance* GI = Cast<UMrPinstripeGameInstance>(GetWorld()->GetGameInstance());
+
+	if (GetName().Contains("Pistol")) {
+		GI->IncreaseViewersNumbers(50);
+	}
+	else if (GetName().Contains("SMG")) {
+		GI->IncreaseViewersNumbers(100);
+	}
+	else if (GetName().Contains("Rifle")) {
+		GI->IncreaseViewersNumbers(150);
+	}
+	else if (GetName().Contains("Shotgun")) {
+		GI->IncreaseViewersNumbers(200);
+	}
+
 }

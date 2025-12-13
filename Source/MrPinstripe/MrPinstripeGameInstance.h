@@ -6,6 +6,7 @@
 
 #include "Engine/GameInstance.h"
 #include "WeaponStructClass.h"
+#include "ViewersStruct.h"
 
 #include "MrPinstripeGameInstance.generated.h"
 
@@ -52,6 +53,10 @@ public:
 	// 테스트가 필요한 구조체 선언
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FWeaponStruct PlayerWeaponStruct;
+
+	// 시청자 수 구조체 선언
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FViewersStruct PlayerViewersStruct;
 
 	// 각 구조체 변수들을 반환 및 초기화하는 함수
 	// NOTE : 여기 항목들은 구조체에 멤버가 새로 추가될때마다 Get과 Set 함수를 매번 구현해야 한다. excel같은 db를 활용한다면 좀 더 간단하고 많은 용량을 저장할 수 있으나
@@ -118,4 +123,31 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetWeaponTypeStr(FString data);
 
+
+	// 시청자 시스템
+	// 방송 시작 / 종료
+	UFUNCTION(BlueprintCallable)
+	void SetStreaming(bool data);
+
+	// 시청자 수는 시간에 따라 점점 줄어듬
+	UFUNCTION(BlueprintCallable)
+	void DecreaseViewersNumbersByTime();
+
+	// 특정한 값을 더해 시청자 수를 늘림
+	UFUNCTION(BlueprintCallable)
+	void IncreaseViewersNumbers(int data);
+
+	// 특정한 값을 빼 시청자 수를 줄임
+	UFUNCTION(BlueprintCallable)
+	void DecreaseViewersNumbers(int data);
+
+	// 특정한 값을 입력해 시청자 수를 설정
+	UFUNCTION(BlueprintCallable)
+	void SetViewersNumbers(int data);
+	
+	// getter
+	UFUNCTION(BlueprintCallable)
+	int GetViewersNumbers();
+	UFUNCTION(BlueprintCallable)
+	bool GetIsLiveStreaming();
 };

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "WeaponStructClass.h"
 #include "GameFramework/SaveGame.h"
+#include "ViewersStruct.h"
 #include "MrPinstripeSaveGame.generated.h"
 
 /**
@@ -21,4 +22,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FWeaponStruct SavedWeaponData;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FViewersStruct SavedViewersData;
 };
