@@ -77,7 +77,42 @@ void UMrPinstripeGameInstance::LoadWeaponSetting()
 	UE_LOG(LogTemp, Log, TEXT("LoadWeaponSetting: 데이터 로드 완료"));
 }
 
+void UMrPinstripeGameInstance::StartChapterTimer(float TimeLimit)
+{
+	// 챕터 타이머 시작 로직 구현
+	UE_LOG(LogTemp, Warning, TEXT("챕터 타이머가 %.2f 초로 시작되었습니다."), TimeLimit);
 
+	ChapterTimeLimit = TimeLimit;
+	GetWorld()->GetTimerManager().SetTimer(
+		ChapterTimerHandler,
+		this,
+		&UMrPinstripeGameInstance::ChapterTimerTick,
+		1.0f,
+		true
+	);
+}
+
+void UMrPinstripeGameInstance::ChapterTimerTick()
+{
+	// 챕터 타이머 틱 로직 구현
+	CurrentChapterTime++;
+}
+
+bool UMrPinstripeGameInstance::CheckingTimeOver()
+{
+	if (CurrentChapterTime > ChapterTimeLimit)
+	{
+		// 시간 초과 시 처리 로직 구현
+		UE_LOG(LogTemp, Warning, TEXT("챕터 시간이 초과되었습니다."));
+		GetWorld()->GetTimerManager().ClearTimer(ChapterTimerHandler);
+		GetWorld()->GetTimerManager().ClearTimer(PlayerViewersStruct.ViewerDecreaseTimerHandle);
+		CurrentChapterTime = 0.f;
+		return true;
+	}
+	else {
+		return false;
+	}
+}
 
 // 권총의 소지 여부
 bool UMrPinstripeGameInstance::GetIsPlayerHavePistol() {

@@ -24,6 +24,14 @@ private:
 
 	virtual void Init() override;
 
+	FTimerHandle ChapterTimerHandler;
+
+	float CurrentChapterTime;
+
+	float ChapterTimeLimit;
+
+	void ChapterTimerTick();
+
 public:
 
 	UFUNCTION(BlueprintCallable)
@@ -49,6 +57,14 @@ public:
 
 	UPROPERTY(BlueprintReadWrite)
 	bool isCrossHairVisible;
+
+	// 챕터 타이머 시작
+	UFUNCTION(BlueprintCallable)
+	void StartChapterTimer(float TimeLimit);
+
+	// 타이머 종료 체크
+	UFUNCTION(BlueprintCallable)
+	bool CheckingTimeOver();
 
 	// 테스트가 필요한 구조체 선언
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
