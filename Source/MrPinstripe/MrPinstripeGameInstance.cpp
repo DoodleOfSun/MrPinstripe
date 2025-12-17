@@ -114,6 +114,23 @@ bool UMrPinstripeGameInstance::CheckingTimeOver()
 	}
 }
 
+bool UMrPinstripeGameInstance::DecreaseEnemyNumberAndCheckingGameDone()
+{
+	if (CurrentEnemyNumber > 0) {
+		CurrentEnemyNumber--;
+		UE_LOG(LogTemp, Warning, TEXT("남은 적의 수: %d"), CurrentEnemyNumber);
+	}
+	else if (CurrentEnemyNumber <= 0) {
+		UE_LOG(LogTemp, Warning, TEXT("모든 적을 처치했습니다! 게임 클리어!"));
+		// 게임 클리어 처리 로직 구현
+		GetWorld()->GetTimerManager().ClearTimer(ChapterTimerHandler);
+		GetWorld()->GetTimerManager().ClearTimer(PlayerViewersStruct.ViewerDecreaseTimerHandle);
+		CurrentChapterTime = 0.f;
+		return true;
+	}
+	return false;
+}
+
 // 권총의 소지 여부
 bool UMrPinstripeGameInstance::GetIsPlayerHavePistol() {
 	return PlayerWeaponStruct.IsPlayerHavePistol;

@@ -89,7 +89,9 @@ void AMrPinstripeGameMode::InitGameMode()
 	}
 
 	// 어떤 상태이든지 처음에는 GameOverWidget은 비활성화
-	GameOverWidget->RemoveFromParent();
+	// 이 코드가 없어도 되는데, 분명 이유가 있어서 예전에 이걸 해놨을것임
+	// 근데 정확한 사항이 기억이 안나고, 주석처리도 안되어있음. 일단 비활성화시켜둠. (주석해제시 오류남)
+	//GameOverWidget->RemoveFromParent();
 }
 
 void AMrPinstripeGameMode::Tick(float DeltaTime)

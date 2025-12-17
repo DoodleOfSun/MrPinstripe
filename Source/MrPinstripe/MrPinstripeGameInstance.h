@@ -66,6 +66,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool CheckingTimeOver();
 
+	UPROPERTY(BlueprintReadWrite)
+	int CurrentEnemyNumber;
+
+	UFUNCTION(BlueprintCallable)
+	bool DecreaseEnemyNumberAndCheckingGameDone();
+
 	// 테스트가 필요한 구조체 선언
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FWeaponStruct PlayerWeaponStruct;
