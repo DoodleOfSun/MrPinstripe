@@ -150,6 +150,9 @@ public:
 
 	void KnockOut(FString StrData);
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool IsExpert;
+
 private:
 	int CurrentAmmo;
 

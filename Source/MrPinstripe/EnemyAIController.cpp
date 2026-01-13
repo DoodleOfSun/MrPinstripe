@@ -90,7 +90,7 @@ void AEnemyAIController::EnemyMovingLogic(float DeltaTime) {
 	// 객체의 이름에 따라 움직임 타입을 다르게 한다.
 	// 만약 Expert라는 이름이 붙은 객체라면, 플레이어를 쫓아 움직이며, 월 러닝 플래그가 true가 되면 이 기능을 멈추어야 한다.
 
-	if (ControlledEnemy->GetName().Contains("Expert"))
+	if (ControlledEnemy->IsExpert)
 	{
 		MoveTime += DeltaTime;
 
