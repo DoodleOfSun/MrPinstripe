@@ -97,6 +97,14 @@ void AEnemy::Init() {
 void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	EnsureValidTargetPlayer();
+	if (!IsValid(TargetPlayerCharacter)) {
+
+		UE_LOG(LogTemp, Warning, TEXT("플레이어 검색에 실패해 리턴합니다."));
+		return;
+	}
+
 	if (TargetPlayerCharacter->IsPlayerDead || EnemyState == EEnemyCombatState::Die || EnemyState == EEnemyCombatState::Hit) {
 		return;
 	}
@@ -580,4 +588,22 @@ void AEnemy::GiveViewersForPlayer() {
 		GI->IncreaseViewersNumbers(200);
 	}
 
+}
+
+void AEnemy::EnsureValidTargetPlayer()
+{
+	if (IsValid(TargetPlayerCharacter)) return;
+
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AMrPinstripeCharacter::StaticClass(), FoundActors);
+
+	for (AActor* Actor : FoundActors)
+	{
+		AMrPinstripeCharacter* MyChar = Cast<AMrPinstripeCharacter>(Actor);
+		if (MyChar && MyChar->GetName().Contains("Viewmodel"))
+		{
+			TargetPlayerCharacter = MyChar;
+			break;
+		}
+	}
 }

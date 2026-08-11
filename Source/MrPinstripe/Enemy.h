@@ -169,4 +169,7 @@ private:
 	bool IsPlayerBehind;
 
 	void GiveViewersForPlayer();
+
+	// Tick에서 새로 스폰된 플레이어를 재검색
+	void EnsureValidTargetPlayer();
 };
