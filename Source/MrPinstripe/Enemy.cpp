@@ -112,6 +112,7 @@ void AEnemy::Tick(float DeltaTime)
 	if (EnemyState != EEnemyCombatState::Die && EnemyState != EEnemyCombatState::Hit) {
 		DetectingPlayerByDistance(DeltaTime);
 		CaculatingAimOffsetRotation(DeltaTime);
+		DetectPlayerAndBackOff(DeltaTime);
 		AnimationControl();
 		Firing(DeltaTime);
 	}
@@ -169,7 +170,9 @@ void AEnemy::FindingPlayerAndFocus() {
 
 void AEnemy::Firing(float DeltaTime) {
 
-	if (IsReadyToShot && GetVelocity().Size() == 0 && !IsPlayerBehind) {
+	//if (IsReadyToShot && GetVelocity().Size() == 0 && !IsPlayerBehind) {
+
+	if (IsReadyToShot && !IsPlayerBehind) {
 
 		FireTime += DeltaTime;
 
@@ -375,10 +378,33 @@ void AEnemy::DetectingPlayerByDistance(float DeltaTime) {
 			TrackingTraceTime = 0.f;
 			TrackingPlayerByLineTrace();
 		}
+
+
 	}
 	else
 	{
 		IsDetectedPlayer = false;
+	}
+}
+
+void AEnemy::DetectPlayerAndBackOff(float DeltaTime) {
+	if(!IsDetectedPlayer || !IsValid(TargetPlayerCharacter)) return;
+
+	const float BackOffDistance = 800.f;	// 이 거리보다 가까우면 후퇴 시작
+	const float BackOffSpeed = 0.6f;		// AddMovementInput 스케일 (0~1)
+	const float FaceInterpSpeed = 6.f;		// 플레이어를 바라보는 회전 보간 속도
+
+	FVector ToPlayer = TargetPlayerCharacter->GetActorLocation() - GetActorLocation();
+	float CurrentDistance = ToPlayer.Size();
+
+	// 몸을 플레이어 쪽으로 고정 (Pitch, Roll은 배제하고 Yaw만 사용)
+	FRotator LookAtPlayer = FRotator(0.f, ToPlayer.Rotation().Yaw, 0.f);
+	SetActorRotation(FMath::RInterpTo(GetActorRotation(), LookAtPlayer, DeltaTime, FaceInterpSpeed));
+
+	if (CurrentDistance < BackOffDistance)
+	{
+		FVector DirectionAwayFromPlayer = -ToPlayer.GetSafeNormal();
+		AddMovementInput(DirectionAwayFromPlayer, BackOffSpeed);
 	}
 }
 

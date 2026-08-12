@@ -172,4 +172,7 @@ private:
 
 	// Tick에서 새로 스폰된 플레이어를 재검색
 	void EnsureValidTargetPlayer();
+
+	// 플레이어를 탐지하고 뒷걸음질
+	void DetectPlayerAndBackOff(float DeltaTime);
 };
