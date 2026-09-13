@@ -112,7 +112,7 @@ void AEnemy::Tick(float DeltaTime)
 	if (EnemyState != EEnemyCombatState::Die && EnemyState != EEnemyCombatState::Hit) {
 		DetectingPlayerByDistance(DeltaTime);
 		CaculatingAimOffsetRotation(DeltaTime);
-		DetectPlayerAndBackOff(DeltaTime);
+		//DetectPlayerAndBackOff(DeltaTime); 적 뒷걸음질 함수, 일단 비활성화
 		AnimationControl();
 		Firing(DeltaTime);
 	}
