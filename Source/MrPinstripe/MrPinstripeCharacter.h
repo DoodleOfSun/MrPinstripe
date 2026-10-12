@@ -108,6 +108,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EMrPinstripeCharacterSystemState State;
 
+
 protected:
 
 	virtual void BeginPlay() override;
